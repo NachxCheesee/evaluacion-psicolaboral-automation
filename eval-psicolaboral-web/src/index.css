@@ -1,0 +1,118 @@
+:root {
+  --aqua-bg: #F9F6F0;             /* Fondo marfil cálido */
+  --aqua-card-bg: #FFFFFF;        /* Blanco limpio para tarjetas */
+  --aqua-text-dark: #1E2D38;      /* Azul pizarra casi negro */
+  --aqua-text-muted: #5F7382;     /* Azul grisáceo atenuado */
+  --aqua-border: #E8E2D8;         /* Borde sutil color arena */
+  --aqua-salmon: #E8633A;         /* Naranja salmón / cobre */
+  --aqua-slate: #4A697B;          /* Azul denim del salmón grabado */
+}
+
+body {
+  background-color: var(--aqua-bg);
+  color: var(--aqua-text-dark);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: -0.01em;
+  min-height: 100vh;
+}
+
+/* Tarjetas limpias estilo editorial */
+.card-aquachile {
+  background-color: var(--aqua-card-bg);
+  border: 1px solid var(--aqua-border);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(30, 45, 56, 0.03);
+}
+
+/* Botón estilo contorno AquaChile ("Conoce más") */
+.btn-aqua-outline {
+  background-color: transparent;
+  color: var(--aqua-salmon);
+  border: 1.5px solid var(--aqua-salmon);
+  border-radius: 2px;
+  padding: 8px 22px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-aqua-outline:hover {
+  background-color: var(--aqua-salmon);
+  color: #FFFFFF;
+}
+
+/* Botón sólido sutil */
+.btn-aqua-solid {
+  background-color: var(--aqua-slate);
+  border: 1.5px solid var(--aqua-slate);
+  color: #FFFFFF;
+  border-radius: 2px;
+  padding: 8px 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-aqua-solid:hover {
+  background-color: #3b5564;
+  border-color: #3b5564;
+  color: #FFFFFF;
+}
+
+/* Encabezado limpio */
+.navbar-aquachile {
+  background-color: #FFFFFF;
+  border-bottom: 1px solid var(--aqua-border);
+}
+
+/* Badges redondeados sutiles */
+.badge-pendiente {
+  background-color: #FFF3CD;
+  color: #856404;
+  border: 1px solid #FFEEBA;
+}
+
+.badge-proceso {
+  background-color: #D1ECF1;
+  color: #0C5460;
+  border: 1px solid #BEE5EB;
+}
+
+.badge-finalizada {
+  background-color: #D4EDDA;
+  color: #155724;
+  border: 1px solid #C3E6CB;
+}
+
+/* Botón de acción principal (CTA) estilo AquaChile */
+.btn-aqua-cta {
+  background-color: var(--aqua-salmon);
+  border: none;
+  color: #FFFFFF;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  border-radius: 4px;
+  box-shadow: 0 4px 14px rgba(232, 99, 58, 0.35);
+  transition: all 0.25s ease-in-out;
+}
+
+.btn-aqua-cta:hover {
+  background-color: #d2532c;
+  color: #FFFFFF;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(232, 99, 58, 0.45);
+}
+
+.btn-aqua-cta:active {
+  transform: translateY(0);
+}
+
+
+/* Enfoque limpio en inputs y selectores (sin halos flúor ni brillos) */
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--aqua-slate); /* Cambia a azul pizarra sobrio */
+  box-shadow: none;                /* Elimina por completo el halo de luz */
+  outline: none;
+}
