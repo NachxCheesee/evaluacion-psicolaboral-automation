@@ -65,7 +65,9 @@ Aplicación web desarrollada en React y Vite para la gestión y seguimiento del 
    * `supabase/seed.sql` — carga las 3 cuentas demo y las 3 solicitudes de ejemplo.
 4. Levanta la app: `npm run dev`.
 
-> Los archivos `.env` están ignorados por git (contienen credenciales del proyecto).
+> El repositorio **incluye el `.env`** con la URL y la *publishable key* (clave
+> pública) del proyecto Supabase, así el equipo arranca directo con `npm install`
+> y `npm run dev`. Nunca suban la clave *secret* (`sb_secret_...`).
 > Nota: los proyectos en el plan Free se pausan tras 1 semana sin actividad
 > (se reactivan con un clic desde el dashboard).
 
