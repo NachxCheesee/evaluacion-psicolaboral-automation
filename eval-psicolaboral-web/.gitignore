@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Variables de entorno locales (el .env con la publishable key SÍ se sube
+# a propósito: es la clave pública y permite al equipo arrancar sin setup;
+# nunca suban la clave secret sb_secret_...)
+.env.local
+.env.*.local
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export default function ModalEditarUsuario({ usuario, onGuardar, onCerrar }) {
   const [nombre, setNombre] = useState("");
@@ -6,14 +6,17 @@ export default function ModalEditarUsuario({ usuario, onGuardar, onCerrar }) {
   const [rol, setRol] = useState("ANALISTA");
   const [password, setPassword] = useState("");
 
-  useEffect(() => {
+  // Sincroniza el formulario cuando cambia el usuario (patrón de React)
+  const [usuarioPrevio, setUsuarioPrevio] = useState(null);
+  if (usuario !== usuarioPrevio) {
+    setUsuarioPrevio(usuario);
     if (usuario) {
       setNombre(usuario.nombre || "");
       setCorreo(usuario.correo || "");
       setRol(usuario.rol || "ANALISTA");
       setPassword(usuario.password || "123");
     }
-  }, [usuario]);
+  }
 
   if (!usuario) return null;
 

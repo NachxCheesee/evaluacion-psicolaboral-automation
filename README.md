@@ -12,10 +12,10 @@ Aplicación web desarrollada en React y Vite para la gestión y seguimiento del 
 ---
 
 ## Tecnologías
-* React 18
+* React 19
 * Vite
 * Bootstrap 5 / CSS3
-* LocalStorage API
+* Supabase (PostgreSQL + API REST) — plan gratuito
 
 ---
 
@@ -45,7 +45,31 @@ Aplicación web desarrollada en React y Vite para la gestión y seguimiento del 
 * Edición de datos/roles y eliminación de accesos.
 
 ### 5. Persistencia
-* Almacenamiento local mediante `localStorage` por el momento para conservar datos entre recargas.
+* Los datos se almacenan en **Supabase (PostgreSQL)**: las cuentas y las solicitudes con su evaluación anidada (`jsonb`) se leen y escriben vía API REST.
+* El login sigue siendo simulado (se valida contra la tabla `cuentas`); la seguridad real por roles (Supabase Auth + RLS) queda como mejora futura.
+* Si la base no está configurada, la app muestra una pantalla de error con instrucciones.
+
+---
+
+## Configuración de Supabase (obligatoria)
+
+1. Crea un proyecto gratuito en [supabase.com](https://supabase.com) (plan Free).
+2. Copia el archivo `.env.example` como `.env` y completa con tus credenciales
+   (Dashboard → *Project Settings → API*):
+   ```env
+   VITE_SUPABASE_URL=https://TU-PROYECTO.supabase.co
+   VITE_SUPABASE_ANON_KEY=tu-anon-key
+   ```
+3. En el **SQL Editor** de Supabase ejecuta, en orden:
+   * `supabase/schema.sql` — crea las tablas `cuentas` y `solicitudes` + RLS.
+   * `supabase/seed.sql` — carga las 3 cuentas demo y las 3 solicitudes de ejemplo.
+4. Levanta la app: `npm run dev`.
+
+> El repositorio **incluye el `.env`** con la URL y la *publishable key* (clave
+> pública) del proyecto Supabase, así el equipo arranca directo con `npm install`
+> y `npm run dev`. Nunca suban la clave *secret* (`sb_secret_...`).
+> Nota: los proyectos en el plan Free se pausan tras 1 semana sin actividad
+> (se reactivan con un clic desde el dashboard).
 
 ---
 
@@ -74,6 +98,9 @@ Aplicación web desarrollada en React y Vite para la gestión y seguimiento del 
 ## Estructura del Proyecto
 
 ```text
+supabase/
+├── schema.sql              # Tablas cuentas/solicitudes + RLS
+└── seed.sql                # Datos iniciales (cuentas demo y solicitudes)
 src/
 ├── components/
 │   ├── modals/
@@ -81,6 +108,7 @@ src/
 │   │   ├── ModalEditarCandidato.jsx
 │   │   ├── ModalEditarUsuario.jsx
 │   │   ├── ModalEvaluacion.jsx
+│   │   ├── ModalGestionUsuarios.jsx
 │   │   └── ModalVerDetalle.jsx
 │   ├── DashboardResumen.jsx
 │   ├── FormularioSolicitud.jsx
@@ -90,7 +118,16 @@ src/
 │   ├── TablaSolicitudes.jsx
 │   └── TablaUsuarios.jsx
 ├── data/
-│   └── mockData.js
+│   └── mockData.js         # Semilla de datos y catálogos (alimenta los tests)
+├── lib/
+│   └── supabaseClient.js   # Cliente de Supabase (lee el .env)
+├── services/
+│   ├── conexion.js         # Helper de conexión y manejo de errores
+│   ├── cuentas.js          # CRUD de cuentas (login simulado)
+│   └── solicitudes.js      # CRUD de solicitudes y evaluaciones
+├── test/
+│   └── app.test.js         # Tests unitarios (Karma + Jasmine)
 ├── App.jsx
 ├── index.css
 └── main.jsx
+```

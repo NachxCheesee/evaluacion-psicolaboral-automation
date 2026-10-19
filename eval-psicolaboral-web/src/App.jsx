@@ -18,35 +18,46 @@ import ModalEvaluacion from "./components/modals/ModalEvaluacion";
 // Modal único y reutilizable para eliminar
 import ModalConfirmarEliminar from "./components/modals/ModalConfirmarEliminar";
 
-import { SOLICITUDES_INICIALES, CUENTAS_AUTORIZADAS } from "./data/mockData";
+import { listarSolicitudes, crearSolicitud, actualizarSolicitud, actualizarEvaluacion, eliminarSolicitud } from "./services/solicitudes";
+import { listarCuentas, crearCuenta, actualizarCuenta, eliminarCuenta } from "./services/cuentas";
 
 export default function App() {
-  // 1. Inicialización reactiva con lectura de localStorage
-  const [cuentas, setCuentas] = useState(() => {
-    const cuentasGuardadas = localStorage.getItem("aquachile_cuentas");
-    return cuentasGuardadas ? JSON.parse(cuentasGuardadas) : CUENTAS_AUTORIZADAS;
-  });
-
-  const [solicitudes, setSolicitudes] = useState(() => {
-    const solicitudesGuardadas = localStorage.getItem("aquachile_solicitudes");
-    return solicitudesGuardadas ? JSON.parse(solicitudesGuardadas) : SOLICITUDES_INICIALES;
-  });
+  // Datos desde Supabase (antes: localStorage)
+  const [cuentas, setCuentas] = useState([]);
+  const [solicitudes, setSolicitudes] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [errorCarga, setErrorCarga] = useState("");
+  const [errorOperacion, setErrorOperacion] = useState("");
 
   const [usuarioActual, setUsuarioActual] = useState(null);
 
-  // 2. Persistencia automática al alterar cualquiera de los arrays
+  // Carga inicial desde la BDD
   useEffect(() => {
-    localStorage.setItem("aquachile_cuentas", JSON.stringify(cuentas));
-  }, [cuentas]);
-
-  useEffect(() => {
-    localStorage.setItem("aquachile_solicitudes", JSON.stringify(solicitudes));
-  }, [solicitudes]);
+    let activo = true;
+    (async () => {
+      try {
+        const [cuentasCargadas, solicitudesCargadas] = await Promise.all([
+          listarCuentas(),
+          listarSolicitudes()
+        ]);
+        if (!activo) return;
+        setCuentas(cuentasCargadas);
+        setSolicitudes(solicitudesCargadas);
+      } catch (e) {
+        if (activo) setErrorCarga(e.message);
+      } finally {
+        if (activo) setCargando(false);
+      }
+    })();
+    return () => {
+      activo = false;
+    };
+  }, []);
 
   // Estados desplegables de formularios
   const [mostrarFormularioCandidato, setMostrarFormularioCandidato] = useState(false);
   const [mostrarFormularioUsuario, setMostrarFormularioUsuario] = useState(false);
-  
+
   // Modales candidatos
   const [solicitudDetalle, setSolicitudDetalle] = useState(null);
   const [solicitudAEditar, setSolicitudAEditar] = useState(null);
@@ -58,59 +69,119 @@ export default function App() {
   const [usuarioAEliminar, setUsuarioAEliminar] = useState(null);
 
   // CRUD Candidatos
-  const handleAgregarSolicitud = (nueva) => {
-    setSolicitudes([nueva, ...solicitudes]);
-    setMostrarFormularioCandidato(false);
+  const handleAgregarSolicitud = async (nueva) => {
+    try {
+      const creada = await crearSolicitud(nueva);
+      setSolicitudes((prev) => [creada, ...prev]);
+      setMostrarFormularioCandidato(false);
+      setErrorOperacion("");
+    } catch (e) {
+      setErrorOperacion(`No se pudo crear la solicitud: ${e.message}`);
+    }
   };
 
-  const handleGuardarEdicionCandidato = (solicitudActualizada) => {
-    setSolicitudes(
-      solicitudes.map((s) => (s.id === solicitudActualizada.id ? solicitudActualizada : s))
-    );
-    setSolicitudAEditar(null);
+  const handleGuardarEdicionCandidato = async (solicitudActualizada) => {
+    try {
+      const guardada = await actualizarSolicitud(solicitudActualizada);
+      setSolicitudes((prev) => prev.map((s) => (s.id === guardada.id ? guardada : s)));
+      setSolicitudAEditar(null);
+      setErrorOperacion("");
+    } catch (e) {
+      setErrorOperacion(`No se pudo editar la solicitud: ${e.message}`);
+    }
   };
 
-  const handleGuardarEvaluacion = (id, datosEvaluacion) => {
-    setSolicitudes(
-      solicitudes.map((s) =>
-        s.id === id
-          ? {
-              ...s,
-              estado: datosEvaluacion.estado,
-              evaluacion: datosEvaluacion.evaluacion
-            }
-          : s
-      )
-    );
-    setSolicitudAEvaluar(null);
+  const handleGuardarEvaluacion = async (id, datosEvaluacion) => {
+    try {
+      const actualizada = await actualizarEvaluacion(id, datosEvaluacion);
+      setSolicitudes((prev) => prev.map((s) => (s.id === actualizada.id ? actualizada : s)));
+      setSolicitudAEvaluar(null);
+      setErrorOperacion("");
+    } catch (e) {
+      setErrorOperacion(`No se pudo guardar la evaluación: ${e.message}`);
+    }
   };
 
-  const handleConfirmarEliminacionCandidato = () => {
-    if (solicitudAEliminar) {
-      setSolicitudes(solicitudes.filter((s) => s.id !== solicitudAEliminar.id));
+  const handleConfirmarEliminacionCandidato = async () => {
+    if (!solicitudAEliminar) return;
+    try {
+      await eliminarSolicitud(solicitudAEliminar.id);
+      const idEliminada = solicitudAEliminar.id;
+      setSolicitudes((prev) => prev.filter((s) => s.id !== idEliminada));
       setSolicitudAEliminar(null);
+      setErrorOperacion("");
+    } catch (e) {
+      setErrorOperacion(`No se pudo eliminar la solicitud: ${e.message}`);
     }
   };
 
   // CRUD Usuarios (Admin)
-  const handleAgregarUsuario = (nuevo) => {
-    setCuentas([...cuentas, nuevo]);
-    setMostrarFormularioUsuario(false);
-  };
-
-  const handleGuardarEdicionUsuario = (usuarioActualizado) => {
-    setCuentas(
-      cuentas.map((c) => (c.id === usuarioActualizado.id ? usuarioActualizado : c))
-    );
-    setUsuarioAEditar(null);
-  };
-
-  const handleConfirmarEliminacionUsuario = () => {
-    if (usuarioAEliminar) {
-      setCuentas(cuentas.filter((c) => c.id !== usuarioAEliminar.id));
-      setUsuarioAEliminar(null);
+  const handleAgregarUsuario = async (nuevo) => {
+    try {
+      const creada = await crearCuenta(nuevo);
+      setCuentas((prev) => [...prev, creada]);
+      setMostrarFormularioUsuario(false);
+      setErrorOperacion("");
+    } catch (e) {
+      setErrorOperacion(`No se pudo crear el usuario: ${e.message}`);
     }
   };
+
+  const handleGuardarEdicionUsuario = async (usuarioActualizado) => {
+    try {
+      const guardado = await actualizarCuenta(usuarioActualizado);
+      setCuentas((prev) => prev.map((c) => (c.id === guardado.id ? guardado : c)));
+      setUsuarioAEditar(null);
+      setErrorOperacion("");
+    } catch (e) {
+      setErrorOperacion(`No se pudo editar el usuario: ${e.message}`);
+    }
+  };
+
+  const handleConfirmarEliminacionUsuario = async () => {
+    if (!usuarioAEliminar) return;
+    try {
+      await eliminarCuenta(usuarioAEliminar.id);
+      const idEliminada = usuarioAEliminar.id;
+      setCuentas((prev) => prev.filter((c) => c.id !== idEliminada));
+      setUsuarioAEliminar(null);
+      setErrorOperacion("");
+    } catch (e) {
+      setErrorOperacion(`No se pudo eliminar el usuario: ${e.message}`);
+    }
+  };
+
+  if (cargando) {
+    return (
+      <div className="min-vh-100 d-flex flex-column align-items-center justify-content-center">
+        <div className="spinner-border text-secondary mb-3" role="status">
+          <span className="visually-hidden">Cargando...</span>
+        </div>
+        <small className="text-muted">Conectando con la base de datos...</small>
+      </div>
+    );
+  }
+
+  if (errorCarga) {
+    return (
+      <div className="container d-flex justify-content-center align-items-center min-vh-100 py-4">
+        <div className="card-aquachile p-4 p-md-5 w-100" style={{ maxWidth: "560px" }}>
+          <h5 className="fw-semibold mb-3" style={{ color: "var(--aqua-text-dark)" }}>
+            No se pudo conectar con la base de datos
+          </h5>
+          <div className="alert alert-danger py-2 small border-0">{errorCarga}</div>
+          <p className="text-muted small mb-2">
+            Verifica que exista el archivo <code>.env</code> con tus credenciales (usa{" "}
+            <code>.env.example</code> como plantilla) y que en Supabase se hayan ejecutado{" "}
+            <code>supabase/schema.sql</code> y <code>supabase/seed.sql</code>.
+          </p>
+          <button className="btn btn-aqua-cta" onClick={() => window.location.reload()}>
+            Reintentar
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!usuarioActual) {
     return <LoginSimulado cuentas={cuentas} onLogin={setUsuarioActual} />;
@@ -124,6 +195,18 @@ export default function App() {
       />
 
       <main className="container">
+        {errorOperacion && (
+          <div className="alert alert-danger py-2 small border-0 d-flex justify-content-between align-items-center">
+            <span>{errorOperacion}</span>
+            <button
+              type="button"
+              className="btn-close"
+              aria-label="Cerrar"
+              onClick={() => setErrorOperacion("")}
+            ></button>
+          </div>
+        )}
+
         <DashboardResumen solicitudes={solicitudes} />
 
         {/* SECCIÓN 1: EVALUACIONES / CANDIDATOS */}
@@ -137,7 +220,7 @@ export default function App() {
         </div>
 
         {mostrarFormularioCandidato && (
-          <FormularioSolicitud 
+          <FormularioSolicitud
             onAgregarSolicitud={handleAgregarSolicitud}
             usuarioActual={usuarioActual}
           />

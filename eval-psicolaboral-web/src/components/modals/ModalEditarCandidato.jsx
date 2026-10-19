@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { FAMILIAS_CARGO } from "../../data/mockData";
 
 export default function ModalEditarCandidato({ solicitud, onGuardar, onCerrar }) {
@@ -13,7 +13,10 @@ export default function ModalEditarCandidato({ solicitud, onGuardar, onCerrar })
   const [cvActual, setCvActual] = useState("");
   const [nuevoCV, setNuevoCV] = useState(null);
 
-  useEffect(() => {
+  // Sincroniza el formulario cuando cambia la solicitud (patrón de React)
+  const [solicitudPrevia, setSolicitudPrevia] = useState(null);
+  if (solicitud !== solicitudPrevia) {
+    setSolicitudPrevia(solicitud);
     if (solicitud) {
       setRut(solicitud.rut || "");
       setCandidato(solicitud.candidato || "");
@@ -24,8 +27,9 @@ export default function ModalEditarCandidato({ solicitud, onGuardar, onCerrar })
       setFamiliaCargo(solicitud.familiaCargo || FAMILIAS_CARGO[0]);
       setObservaciones(solicitud.observaciones || "");
       setCvActual(solicitud.cvAdjunto || "Sin archivo adjunto");
+      setNuevoCV(null);
     }
-  }, [solicitud]);
+  }
 
   if (!solicitud) return null;
 

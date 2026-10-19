@@ -1,17 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export default function ModalEvaluacion({ solicitud, onGuardarEvaluacion, onCerrar }) {
   const [fechaEntrevista, setFechaEntrevista] = useState("");
   const [estado, setEstado] = useState("Pendiente");
   const [resultado, setResultado] = useState("En evaluación");
   const [observacionesEvaluador, setObservacionesEvaluador] = useState("");
-  
+
   const [transcripcionActual, setTranscripcionActual] = useState("");
   const [informeActual, setInformeActual] = useState("");
   const [nuevaTranscripcion, setNuevaTranscripcion] = useState(null);
   const [nuevoInforme, setNuevoInforme] = useState(null);
 
-  useEffect(() => {
+  // Sincroniza el formulario cuando cambia la solicitud (patrón de React)
+  const [solicitudPrevia, setSolicitudPrevia] = useState(null);
+  if (solicitud !== solicitudPrevia) {
+    setSolicitudPrevia(solicitud);
     if (solicitud) {
       setFechaEntrevista(solicitud.evaluacion?.fechaEntrevista || "");
       setEstado(solicitud.estado || "Pendiente");
@@ -19,8 +22,10 @@ export default function ModalEvaluacion({ solicitud, onGuardarEvaluacion, onCerr
       setObservacionesEvaluador(solicitud.evaluacion?.observacionesEvaluador || "");
       setTranscripcionActual(solicitud.evaluacion?.archivoTranscripcion || "");
       setInformeActual(solicitud.evaluacion?.archivoInformeFinal || "");
+      setNuevaTranscripcion(null);
+      setNuevoInforme(null);
     }
-  }, [solicitud]);
+  }
 
   if (!solicitud) return null;
 

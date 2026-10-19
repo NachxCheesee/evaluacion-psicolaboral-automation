@@ -36,7 +36,6 @@ export default function FormularioSolicitud({ onAgregarSolicitud, usuarioActual 
     }
 
     const nuevaSolicitud = {
-      id: Date.now(),
       rut: rut.trim(),
       candidato: candidato.trim(),
       correo: correo.trim(),

@@ -28,6 +28,7 @@ export default function LoginSimulado({ cuentas, onLogin }) {
   };
 
   const autocompletar = (cuenta) => {
+    if (!cuenta) return;
     setCorreo(cuenta.correo);
     setPassword(cuenta.password);
     setError("");
@@ -52,6 +53,13 @@ export default function LoginSimulado({ cuentas, onLogin }) {
         {error && (
           <div className="alert alert-danger py-2 small mb-3 text-center border-0 shadow-sm">
             {error}
+          </div>
+        )}
+
+        {cuentas.length === 0 && (
+          <div className="alert alert-warning py-2 small mb-3 text-center border-0 shadow-sm">
+            No hay cuentas en la base de datos. Ejecuta <code>supabase/seed.sql</code> en el SQL
+            Editor de Supabase.
           </div>
         )}
 
