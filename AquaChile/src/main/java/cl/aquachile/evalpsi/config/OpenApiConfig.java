@@ -7,6 +7,7 @@ import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 
 /**
@@ -25,11 +26,12 @@ public class OpenApiConfig {
                         .version("1.0.0")
                         .contact(new Contact().name("Equipo Full Stack - AquaChile")))
                 .components(new Components()
-                        // Esquema listo para la Parte 2: botón "Authorize" con Bearer JWT.
+                        // Esquema para el botón "Authorize" de Swagger UI.
                         .addSecuritySchemes("bearerAuth", new SecurityScheme()
                                 .name("bearerAuth")
                                 .type(SecurityScheme.Type.HTTP)
                                 .scheme("bearer")
-                                .bearerFormat("JWT")));
+                                .bearerFormat("JWT")))
+                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"));
     }
 }

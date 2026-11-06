@@ -1,19 +1,26 @@
 # ============================================================================
 # AquaChile - Microservicio de Evaluaciones Psicolaborales
 # ----------------------------------------------------------------------------
-# Parte 1: esqueleto del microservicio.
-# En esta etapa la aplicación levanta con H2 en memoria para poder probar el
-# endpoint de salud sin depender todavía de Supabase.
-# En la Parte 2 se reemplazan las variables DB_* por las credenciales del
-# Session Pooler de Supabase y se activa Flyway.
+# Parte 2: conexión con Supabase mediante JDBC (Session Pooler), autenticación
+# JWT y CRUD completo. Las credenciales se leen del archivo .env local o de
+# variables de entorno; nunca se escriben en este archivo.
 # ============================================================================
 
 spring:
   application:
     name: AquaChile
 
+  # Carga el archivo .env local como propiedades (no se sube al repo).
+  # Se admiten dos ubicaciones para que funcione tanto si IntelliJ ejecuta
+  # desde AquaChile como si ejecuta desde la raíz del repositorio.
+  config:
+    import:
+      - "optional:file:./.env[.properties]"
+      - "optional:file:./AquaChile/.env[.properties]"
+
   datasource:
-    # TODO Parte 2: cambiar por jdbc:postgresql://<host>:<puerto>/postgres?sslmode=require
+    # Por defecto H2 (útil para pruebas locales sin .env).
+    # En Supabase se usa el Session Pooler: jdbc:postgresql://...:5432/postgres?sslmode=require
     url: ${DB_URL:jdbc:h2:mem:aquachile;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
     username: ${DB_USERNAME:sa}
     password: ${DB_PASSWORD:}
@@ -26,19 +33,21 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
+      # En Supabase se usa validate: Hibernate revisa el esquema pero no lo modifica.
       ddl-auto: ${JPA_DDL_AUTO:none}
     properties:
       hibernate:
         format_sql: true
 
   flyway:
-    # Se activa en la Parte 2, cuando existan las migraciones y la BD real.
+    # La migración de la Parte 2 es un script SQL manual (parte2_seguridad.sql).
     enabled: ${FLYWAY_ENABLED:false}
     locations: classpath:db/migration
 
   h2:
     console:
-      enabled: ${H2_CONSOLE_ENABLED:true}
+      # Deshabilitada por defecto: la base real es Supabase/PostgreSQL.
+      enabled: ${H2_CONSOLE_ENABLED:false}
       path: /h2-console
 
 server:
@@ -52,7 +61,8 @@ app:
     # Origen del frontend (Vite). Se pueden agregar varios separados por coma.
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
   jwt:
-    # TODO Parte 2: mover a una variable de entorno segura.
+    # En local se lee de .env; en producción debe venir del entorno.
+    # Mínimo 32 caracteres.
     secret: ${JWT_SECRET:aquachile-dev-secret-cambiar-en-produccion-2026}
     access-token-minutes: ${JWT_ACCESS_MINUTES:30}
     refresh-token-days: ${JWT_REFRESH_DAYS:7}
