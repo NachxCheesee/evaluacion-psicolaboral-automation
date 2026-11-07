@@ -1,0 +1,70 @@
+# Conexión con Supabase (Session Pooler) y JWT. Credenciales en .env.
+spring:
+  application:
+    name: AquaChile
+
+  config:
+    import:
+      - "optional:file:./.env[.properties]"
+      - "optional:file:./AquaChile/.env[.properties]"
+
+  datasource:
+    # En Supabase se usa el Session Pooler: jdbc:postgresql://...:5432/postgres?sslmode=require
+    url: ${DB_URL:jdbc:h2:mem:aquachile;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:}
+    driver-class-name: ${DB_DRIVER:org.h2.Driver}
+    hikari:
+      # Pool pequeño: plan Free de Supabase limita conexiones simultáneas.
+      maximum-pool-size: ${DB_POOL_SIZE:5}
+      connection-timeout: 10000
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      # En Supabase se usa validate: Hibernate revisa el esquema pero no lo modifica.
+      ddl-auto: ${JPA_DDL_AUTO:none}
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: ${FLYWAY_ENABLED:false}
+    locations: classpath:db/migration
+
+  h2:
+    console:
+      # La base real es Supabase/PostgreSQL.
+      enabled: ${H2_CONSOLE_ENABLED:false}
+      path: /h2-console
+
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: always
+    include-binding-errors: always
+
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  jwt:
+    # En local se lee de .env; en producción debe venir del entorno.
+    # Mínimo 32 caracteres.
+    secret: ${JWT_SECRET:aquachile-dev-secret-cambiar-en-produccion-2026}
+    access-token-minutes: ${JWT_ACCESS_MINUTES:30}
+    refresh-token-days: ${JWT_REFRESH_DAYS:7}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
