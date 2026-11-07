@@ -17,12 +17,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Cuenta institucional que puede iniciar sesión en el sistema.
- *
- * <p>Importante: esta entidad NUNCA se devuelve directamente en un endpoint.
- * Siempre se transforma a un DTO sin contraseña.</p>
- */
 @Entity
 @Table(name = "cuentas")
 @Getter

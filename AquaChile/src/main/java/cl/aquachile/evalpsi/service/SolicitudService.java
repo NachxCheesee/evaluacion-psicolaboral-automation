@@ -22,16 +22,9 @@ import cl.aquachile.evalpsi.model.Solicitud;
 import cl.aquachile.evalpsi.repository.SolicitudRepository;
 import jakarta.persistence.criteria.Predicate;
 
-/**
- * Lógica de negocio de las solicitudes de evaluación.
- */
 @Service
 public class SolicitudService {
 
-    /**
-     * Solo se permite ordenar por estos campos para evitar inyección de
-     * propiedades arbitrarias en el Sort de Spring Data.
-     */
     private static final Set<String> CAMPOS_ORDEN = Set.of(
             "id", "fechaSolicitud", "candidato", "cargo", "estado"
     );
@@ -64,8 +57,6 @@ public class SolicitudService {
 
         String filtroBusqueda = (busqueda == null || busqueda.isBlank()) ? null : busqueda.trim();
 
-        // Se construyen solo las condiciones presentes. Evita el problema de
-        // parámetros nulos sin tipo en PostgreSQL (los interpreta como bytea).
         Specification<Solicitud> especificacion = (root, query, cb) -> {
             List<Predicate> condiciones = new ArrayList<>();
 
@@ -111,9 +102,6 @@ public class SolicitudService {
         return SolicitudMapper.toResponse(solicitudRepository.save(solicitud));
     }
 
-    /**
-     * Guarda el estado y la evaluación (entrevista, resultado, archivos).
-     */
     @Transactional
     public SolicitudResponse actualizarEvaluacion(Long id, ActualizarEvaluacionRequest request) {
         Solicitud solicitud = buscar(id);

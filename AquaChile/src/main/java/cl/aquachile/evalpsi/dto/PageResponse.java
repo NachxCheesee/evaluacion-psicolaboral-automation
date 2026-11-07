@@ -4,10 +4,6 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 
-/**
- * Envoltorio de paginación propio, para no exponer la estructura interna
- * de Spring Data al frontend.
- */
 public record PageResponse<T>(
         List<T> content,
         int page,

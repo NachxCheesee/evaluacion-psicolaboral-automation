@@ -10,10 +10,6 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 
-/**
- * Documentación interactiva de la API en Swagger UI:
- * http://localhost:8080/swagger-ui.html
- */
 @Configuration
 public class OpenApiConfig {
 
@@ -26,7 +22,6 @@ public class OpenApiConfig {
                         .version("1.0.0")
                         .contact(new Contact().name("Equipo Full Stack - AquaChile")))
                 .components(new Components()
-                        // Esquema para el botón "Authorize" de Swagger UI.
                         .addSecuritySchemes("bearerAuth", new SecurityScheme()
                                 .name("bearerAuth")
                                 .type(SecurityScheme.Type.HTTP)

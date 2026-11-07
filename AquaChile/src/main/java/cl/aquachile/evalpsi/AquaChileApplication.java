@@ -5,12 +5,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration;
 
-/**
- * Punto de entrada del microservicio AquaChile.
- *
- * <p>Backend REST que centraliza el acceso a Supabase y reemplaza el login
- * simulado del frontend por autenticación con JWT (Parte 2).</p>
- */
 // No usamos el usuario en memoria de Spring Security: la autenticación real
 // se resuelve con el filtro JWT y la tabla cuentas.
 @SpringBootApplication(exclude = UserDetailsServiceAutoConfiguration.class)

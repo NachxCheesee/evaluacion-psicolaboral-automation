@@ -6,12 +6,6 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-/**
- * Datos para crear o editar una solicitud de evaluación.
- *
- * <p>Los campos obligatorios replican las validaciones que hoy hace el
- * formulario React (RUT, candidato, correo y cargo).</p>
- */
 public record SolicitudRequest(
         String rut,
 
@@ -34,12 +28,10 @@ public record SolicitudRequest(
         String responsable,
         String cvAdjunto,
 
-        /** Texto del estado ("Pendiente", "En proceso", "Finalizada"). */
         String estado,
 
         String observaciones,
 
-        /** Si no viene, se crea una evaluación vacía. */
         EvaluacionDto evaluacion
 ) {
 }

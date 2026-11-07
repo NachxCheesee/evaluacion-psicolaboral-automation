@@ -10,13 +10,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-/**
- * CORS para que el frontend React/Vite (por defecto http://localhost:5173)
- * pueda consumir el microservicio sin bloqueos del navegador.
- *
- * <p>Los orígenes permitidos se configuran con la variable de entorno
- * {@code CORS_ALLOWED_ORIGINS} (varios separados por coma).</p>
- */
 @Configuration
 public class CorsConfig {
 

@@ -9,10 +9,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import cl.aquachile.evalpsi.dto.HealthResponse;
 
-/**
- * Endpoint de verificación usado para comprobar que el microservicio está vivo.
- * Es público (ver SecurityConfig) y sirve como primer smoke test de la Parte 1.
- */
 @RestController
 @RequestMapping("/api/health")
 public class HealthController {

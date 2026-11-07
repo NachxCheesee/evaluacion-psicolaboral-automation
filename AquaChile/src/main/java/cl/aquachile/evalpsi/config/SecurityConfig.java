@@ -16,12 +16,6 @@ import cl.aquachile.evalpsi.security.JwtAuthenticationFilter;
 import cl.aquachile.evalpsi.security.RestAccessDeniedHandler;
 import cl.aquachile.evalpsi.security.RestAuthenticationEntryPoint;
 
-/**
- * Configuración de seguridad de la API.
- *
- * <p>Parte 2: la API es stateless y se autentica con JWT. Los permisos finos
- * por rol se declaran con {@code @PreAuthorize} en los controladores.</p>
- */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -42,7 +36,6 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // API REST sin formularios: no usamos CSRF ni sesiones HTTP.
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -60,7 +53,6 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/h2-console/**"
                         ).permitAll()
-                        // Todo lo demás exige un JWT válido.
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(handling -> handling
@@ -72,9 +64,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-    /**
-     * BCrypt para hashear contraseñas nuevas y para validar las existentes.
-     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

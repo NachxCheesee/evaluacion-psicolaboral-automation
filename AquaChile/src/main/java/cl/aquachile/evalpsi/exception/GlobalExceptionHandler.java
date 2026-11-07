@@ -18,10 +18,6 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 import cl.aquachile.evalpsi.dto.ApiError;
 import jakarta.servlet.http.HttpServletRequest;
 
-/**
- * Manejo global de errores: todas las respuestas de error salen con el mismo
- * formato (ApiError) para que el frontend pueda mostrarlas sin casos especiales.
- */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -80,9 +76,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
-    /**
-     * Ruta inexistente (por ejemplo, un endpoint mal escrito).
-     */
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ApiError> handleNoResource(NoResourceFoundException ex,
                                                      HttpServletRequest request) {
@@ -133,10 +126,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
-    /**
-     * @PreAuthorize lanza AccessDeniedException dentro del controlador.
-     * Sin este handler, el catch genérico lo convertiría en un 500.
-     */
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiError> handleAccessDenied(AccessDeniedException ex,
                                                        HttpServletRequest request) {

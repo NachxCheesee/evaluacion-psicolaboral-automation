@@ -36,7 +36,6 @@ public class JwtService {
                     "JWT_SECRET debe tener al menos 32 caracteres. Revisa tu archivo .env"
             );
         }
-        // HS256 requiere una clave de al menos 256 bits.
         this.clave = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 

@@ -21,13 +21,6 @@ import cl.aquachile.evalpsi.dto.solicitud.SolicitudResponse;
 import cl.aquachile.evalpsi.service.SolicitudService;
 import jakarta.validation.Valid;
 
-/**
- * CRUD de solicitudes de evaluación psicolaboral.
- *
- * <p>Reglas de rol (las mismas del frontend):
- * ANALISTA puede crear y consultar; EVALUADOR y ADMIN pueden editar,
- * evaluar y eliminar.</p>
- */
 @RestController
 @RequestMapping("/api/solicitudes")
 public class SolicitudController {

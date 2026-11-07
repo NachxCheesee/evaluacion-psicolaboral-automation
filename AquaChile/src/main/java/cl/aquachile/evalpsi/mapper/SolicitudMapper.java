@@ -10,9 +10,6 @@ import cl.aquachile.evalpsi.exception.BadRequestException;
 import cl.aquachile.evalpsi.model.Evaluacion;
 import cl.aquachile.evalpsi.model.Solicitud;
 
-/**
- * Conversiones entre la entidad Solicitud y los DTOs de la API.
- */
 public final class SolicitudMapper {
 
     private SolicitudMapper() {
@@ -37,11 +34,6 @@ public final class SolicitudMapper {
                 .build();
     }
 
-    /**
-     * Aplica los cambios de un PUT sobre una entidad existente.
-     * Los campos opcionales que llegan null se conservan; para borrar un
-     * valor se debe enviar una cadena vacía.
-     */
     public static void aplicar(Solicitud solicitud, SolicitudRequest request) {
         if (request.rut() != null) {
             solicitud.setRut(normalizar(request.rut()));
@@ -131,11 +123,6 @@ public final class SolicitudMapper {
         );
     }
 
-    /**
-     * Mezcla una evaluación recibida con la existente. Los campos que llegan
-     * null se conservan, para no borrar información si el cliente envía un
-     * objeto parcial.
-     */
     public static Evaluacion mezclar(Evaluacion actual, EvaluacionDto dto) {
         Evaluacion base = actual != null ? actual : Evaluacion.vacia();
 
@@ -160,10 +147,6 @@ public final class SolicitudMapper {
         return base;
     }
 
-    /**
-     * Convierte el estado recibido como texto al enum, con mensaje claro
-     * si el frontend envía un valor desconocido.
-     */
     public static EstadoSolicitud parseEstado(String valor, EstadoSolicitud porDefecto) {
         if (valor == null || valor.isBlank()) {
             return porDefecto;

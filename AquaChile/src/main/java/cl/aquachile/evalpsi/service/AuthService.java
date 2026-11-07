@@ -26,12 +26,6 @@ import cl.aquachile.evalpsi.repository.CuentaRepository;
 import cl.aquachile.evalpsi.repository.RefreshTokenRepository;
 import cl.aquachile.evalpsi.security.JwtService;
 
-/**
- * Lógica de autenticación: login, refresh, logout y datos del usuario actual.
- *
- * <p>El refresh token se guarda hasheado en la base y se rota en cada uso.
- * Así, si alguien roba un refresh token usado, deja de servir.</p>
- */
 @Service
 public class AuthService {
 
@@ -55,13 +49,6 @@ public class AuthService {
         this.jwtProperties = jwtProperties;
     }
 
-    /**
-     * Valida credenciales y emite un par de tokens.
-     *
-     * <p>Compatibilidad temporal: si el hash no coincide pero la columna
-     * {@code password} (que todavía usa el frontend antiguo) sí, se acepta el
-     * login y se regenera el hash BCrypt.</p>
-     */
     @Transactional
     public LoginResponse login(LoginRequest request) {
         String correo = request.correo().trim();
@@ -81,9 +68,6 @@ public class AuthService {
         return emitirTokens(cuenta);
     }
 
-    /**
-     * Renueva el access token usando un refresh token válido.
-     */
     @Transactional
     public LoginResponse refresh(RefreshTokenRequest request) {
         String hash = hashToken(request.refreshToken());
@@ -104,9 +88,6 @@ public class AuthService {
         return emitirTokens(refreshToken.getCuenta());
     }
 
-    /**
-     * Revoca el refresh token. Es idempotente: si no existe, igual responde OK.
-     */
     @Transactional
     public void logout(RefreshTokenRequest request) {
         String hash = hashToken(request.refreshToken());
@@ -171,18 +152,12 @@ public class AuthService {
         );
     }
 
-    /**
-     * Token opaco de 48 bytes aleatorios, codificado en Base64 URL.
-     */
     private String generarRefreshToken() {
         byte[] bytes = new byte[48];
         RANDOM.nextBytes(bytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 
-    /**
-     * SHA-256 del token. En la base solo vive el hash, nunca el token original.
-     */
     private String hashToken(String token) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");

@@ -12,10 +12,6 @@ import cl.aquachile.evalpsi.enums.EstadoSolicitud;
 import cl.aquachile.evalpsi.enums.ResultadoEvaluacion;
 import cl.aquachile.evalpsi.enums.Rol;
 
-/**
- * Catálogos usados por los formularios del frontend.
- * Evita que las listas queden duplicadas y desincronizadas.
- */
 @RestController
 @RequestMapping("/api/catalogos")
 @PreAuthorize("isAuthenticated()")

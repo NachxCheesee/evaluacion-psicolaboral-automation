@@ -57,7 +57,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
             } catch (JwtException | IllegalArgumentException ex) {
-                // Token vencido, mal firmado o con formato incorrecto.
                 SecurityContextHolder.clearContext();
             }
         }

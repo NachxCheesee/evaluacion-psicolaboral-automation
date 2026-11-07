@@ -3,9 +3,6 @@ package cl.aquachile.evalpsi.dto.auth;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
-/**
- * Credenciales enviadas por el frontend en el login.
- */
 public record LoginRequest(
         @NotBlank(message = "El correo es obligatorio")
         @Email(message = "El correo no tiene un formato válido")

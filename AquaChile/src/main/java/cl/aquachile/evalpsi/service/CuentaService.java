@@ -19,9 +19,6 @@ import cl.aquachile.evalpsi.mapper.CuentaMapper;
 import cl.aquachile.evalpsi.model.Cuenta;
 import cl.aquachile.evalpsi.repository.CuentaRepository;
 
-/**
- * CRUD de cuentas institucionales. Solo lo usa el rol ADMIN.
- */
 @Service
 public class CuentaService {
 
@@ -51,8 +48,6 @@ public class CuentaService {
 
         Cuenta cuenta = Cuenta.builder()
                 .correo(correo)
-                // Se guarda el texto plano solo por compatibilidad con el frontend
-                // antiguo; la autenticación real usa passwordHash.
                 .password(request.password())
                 .passwordHash(passwordEncoder.encode(request.password()))
                 .nombre(request.nombre().trim())
@@ -80,7 +75,6 @@ public class CuentaService {
         cuenta.setRol(request.rol());
         cuenta.setTituloRol(tituloPorDefecto(request.rol(), request.tituloRol()));
 
-        // Solo se cambia la contraseña si el administrador escribió una nueva.
         if (request.password() != null && !request.password().isBlank()) {
             cuenta.setPassword(request.password());
             cuenta.setPasswordHash(passwordEncoder.encode(request.password()));
@@ -89,10 +83,6 @@ public class CuentaService {
         return CuentaMapper.toResponse(cuentaRepository.save(cuenta));
     }
 
-    /**
-     * Elimina una cuenta. Un administrador no puede eliminarse a sí mismo
-     * para evitar dejar el sistema sin acceso.
-     */
     @Transactional
     public void eliminar(Long id, String correoAutenticado) {
         Cuenta cuenta = buscar(id);

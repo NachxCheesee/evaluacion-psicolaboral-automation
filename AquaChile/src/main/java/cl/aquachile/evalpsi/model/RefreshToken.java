@@ -17,12 +17,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Refresh token emitido a una cuenta.
- *
- * <p>Por seguridad no se guarda el token en claro: solo su hash SHA-256.
- * Así, aunque alguien lea la tabla, no puede reutilizar los tokens.</p>
- */
 @Entity
 @Table(name = "refresh_tokens")
 @Getter
@@ -51,4 +45,6 @@ public class RefreshToken {
 
     @Column(name = "creado_en", nullable = false)
     private Instant creadoEn;
+
+    // Hash SHA-256 del refresh token: nunca se guarda el token en claro.
 }

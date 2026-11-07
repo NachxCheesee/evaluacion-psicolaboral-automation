@@ -19,12 +19,6 @@ import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-/**
- * Solicitud de evaluación psicolaboral de un candidato.
- *
- * <p>El bloque de evaluación se guarda como {@code jsonb}, igual que en el
- * frontend actual, y se mapea con {@link Evaluacion}.</p>
- */
 @Entity
 @Table(name = "solicitudes")
 @Getter
@@ -71,10 +65,6 @@ public class Solicitud {
     @Column(name = "cv_adjunto", columnDefinition = "text")
     private String cvAdjunto;
 
-    /**
-     * El converter traduce el enum al texto en español que ya usa la BD
-     * ("Pendiente", "En proceso", "Finalizada").
-     */
     @Convert(converter = EstadoSolicitudConverter.class)
     @Column(nullable = false, columnDefinition = "text")
     private EstadoSolicitud estado;
@@ -82,9 +72,6 @@ public class Solicitud {
     @Column(columnDefinition = "text")
     private String observaciones;
 
-    /**
-     * Hibernate serializa/deserializa este objeto a la columna jsonb.
-     */
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(nullable = false, columnDefinition = "jsonb")
     private Evaluacion evaluacion;

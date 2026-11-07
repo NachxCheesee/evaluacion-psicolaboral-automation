@@ -3,10 +3,6 @@ package cl.aquachile.evalpsi.enums;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-/**
- * Resultados posibles de una evaluación psicolaboral.
- * La base los guarda como texto dentro del campo jsonb {@code evaluacion}.
- */
 public enum ResultadoEvaluacion {
 
     EN_EVALUACION("En evaluación"),

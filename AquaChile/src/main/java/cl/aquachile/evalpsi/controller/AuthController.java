@@ -16,16 +16,6 @@ import cl.aquachile.evalpsi.dto.usuario.UsuarioResponse;
 import cl.aquachile.evalpsi.service.AuthService;
 import jakarta.validation.Valid;
 
-/**
- * Endpoints de sesión.
- *
- * <ul>
- *   <li>POST /api/auth/login    → credenciales → access + refresh token</li>
- *   <li>POST /api/auth/refresh  → refresh token → tokens nuevos</li>
- *   <li>POST /api/auth/logout   → revoca el refresh token</li>
- *   <li>GET  /api/auth/me       → datos del usuario autenticado</li>
- * </ul>
- */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {

@@ -11,10 +11,6 @@ import org.springframework.stereotype.Component;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-/**
- * Responde 401 en formato JSON cuando falta el token o es inválido,
- * en vez de redirigir al login HTML de Spring Security.
- */
 @Component
 public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
 

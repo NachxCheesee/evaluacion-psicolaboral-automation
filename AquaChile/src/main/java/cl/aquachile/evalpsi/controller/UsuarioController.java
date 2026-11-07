@@ -21,10 +21,6 @@ import cl.aquachile.evalpsi.dto.usuario.UsuarioResponse;
 import cl.aquachile.evalpsi.service.CuentaService;
 import jakarta.validation.Valid;
 
-/**
- * Administración de cuentas institucionales.
- * Todo el controlador está restringido al rol ADMIN.
- */
 @RestController
 @RequestMapping("/api/usuarios")
 @PreAuthorize("hasRole('ADMIN')")

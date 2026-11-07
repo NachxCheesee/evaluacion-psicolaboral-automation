@@ -11,10 +11,6 @@ import org.springframework.stereotype.Component;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-/**
- * Responde 403 en formato JSON cuando el usuario está autenticado pero su rol
- * no tiene permiso para la operación.
- */
 @Component
 public class RestAccessDeniedHandler implements AccessDeniedHandler {
 
