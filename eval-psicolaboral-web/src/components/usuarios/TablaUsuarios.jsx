@@ -8,6 +8,9 @@ export default function TablaUsuarios({
 }) {
   const [busqueda, setBusqueda] = useState('');
   const [filtroRol, setFiltroRol] = useState('Todos');
+  
+  // Estado para controlar qué usuario se está por eliminar con el Modal
+  const [usuarioAEliminar, setUsuarioAEliminar] = useState(null);
 
   // Filtrado seguro sobre el arreglo de usuarios
   const usuariosFiltrados = (usuarios || []).filter((user) => {
@@ -21,16 +24,24 @@ export default function TablaUsuarios({
     return coincideTexto && coincideRol;
   });
 
+  // Clases estéticas corporativas (sin colores chillones)
   const getBadgeRol = (rol) => {
     switch (rol) {
       case 'ADMIN':
-        return 'bg-danger';
+        return 'badge-rol-admin';
       case 'EVALUADOR':
-        return 'bg-success';
+        return 'badge-rol-evaluador';
       case 'ANALISTA':
-        return 'bg-primary';
+        return 'badge-rol-analista';
       default:
-        return 'bg-secondary';
+        return 'badge bg-secondary';
+    }
+  };
+
+  const confirmarEliminacion = () => {
+    if (usuarioAEliminar) {
+      onEliminarUsuario(usuarioAEliminar.id);
+      setUsuarioAEliminar(null);
     }
   };
 
@@ -91,7 +102,9 @@ export default function TablaUsuarios({
                       <td className="fw-semibold small">
                         {u.nombre}
                         {esUsuarioEnSesion && (
-                          <span className="badge bg-light text-primary border ms-2 small">Sesión Activa</span>
+                          <span className="badge-sesion-activa ms-2">
+                            Sesión Activa
+                          </span>
                         )}
                       </td>
                       <td className="text-muted small">{u.correo}</td>
@@ -114,11 +127,7 @@ export default function TablaUsuarios({
                             type="button"
                             className="btn btn-outline-danger"
                             disabled={esUsuarioEnSesion}
-                            onClick={() => {
-                              if (window.confirm(`¿Estás seguro de eliminar la cuenta de ${u.nombre}?`)) {
-                                onEliminarUsuario(u.id);
-                              }
-                            }}
+                            onClick={() => setUsuarioAEliminar(u)}
                             title={esUsuarioEnSesion ? 'No puedes eliminar tu propia cuenta en sesión' : 'Eliminar Cuenta'}
                           >
                             Borrar
@@ -133,6 +142,71 @@ export default function TablaUsuarios({
           </table>
         </div>
       </div>
+
+      {/* MODAL DE CONFIRMACIÓN DE BORRADO DE USUARIO */}
+      {usuarioAEliminar && (
+        <div
+          className="modal show d-block"
+          tabIndex="-1"
+          role="dialog"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.65)', zIndex: 1055 }}
+          onClick={() => setUsuarioAEliminar(null)}
+        >
+          <div
+            className="modal-dialog modal-dialog-centered"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-content border-0 shadow-lg rounded-3">
+              <div className="modal-header bg-light py-3 border-bottom">
+                <h5 className="modal-title fw-bold text-danger mb-0 d-flex align-items-center gap-2">
+                  <i className="bi bi-exclamation-triangle-fill"></i>
+                  <span>Eliminar Cuenta Institucional</span>
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setUsuarioAEliminar(null)}
+                  aria-label="Cerrar"
+                ></button>
+              </div>
+
+              <div className="modal-body p-4">
+                <p className="mb-2 text-dark">
+                  ¿Estás seguro de que deseas revocar el acceso y eliminar permanentemente a este usuario?
+                </p>
+                <div className="p-3 bg-light rounded-3 border mb-3">
+                  <div className="fw-bold text-dark">{usuarioAEliminar.nombre}</div>
+                  <div className="text-muted small">
+                    {usuarioAEliminar.correo} · Rol: <span className="fw-semibold text-dark">{usuarioAEliminar.rol}</span>
+                  </div>
+                </div>
+                <p className="text-muted small mb-0">
+                  <i className="bi bi-info-circle me-1"></i>
+                  Esta acción revocará sus permisos en el sistema de inmediato.
+                </p>
+              </div>
+
+              <div className="modal-footer bg-light py-2 border-top">
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary btn-sm px-3"
+                  onClick={() => setUsuarioAEliminar(null)}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger btn-sm px-3 fw-semibold d-flex align-items-center gap-1"
+                  onClick={confirmarEliminacion}
+                >
+                  <i className="bi bi-trash3"></i>
+                  <span>Eliminar Cuenta</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

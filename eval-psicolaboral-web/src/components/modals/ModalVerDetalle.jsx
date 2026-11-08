@@ -31,10 +31,10 @@ export default function ModalVerDetalle({ solicitud, onClose, onCerrar }) {
       >
         <div className="modal-content border-0 shadow-lg rounded-3">
           {/* Cabecera */}
-          <div className="modal-header bg-light py-3">
-            <h5 className="modal-title fw-bold text-primary mb-0">
-              <i className="bi bi-file-earmark-person me-2"></i>
-              Expediente del Postulante
+          <div className="modal-header bg-light py-3 border-bottom">
+            <h5 className="modal-title fw-bold text-primary mb-0 d-flex align-items-center gap-2">
+              <i className="bi bi-file-earmark-person"></i>
+              <span>Expediente del Postulante</span>
             </h5>
             <button
               type="button"
@@ -49,7 +49,7 @@ export default function ModalVerDetalle({ solicitud, onClose, onCerrar }) {
             <div className="d-flex justify-content-between align-items-start mb-3 pb-3 border-bottom">
               <div>
                 <h5 className="mb-1 fw-bold text-dark">{solicitud.candidato}</h5>
-                <span className="text-muted small">RUT: {solicitud.rut}</span>
+                <span className="text-muted small">RUT: <strong className="text-dark">{solicitud.rut}</strong></span>
               </div>
               <div className="d-flex gap-2">
                 <span className={`badge ${solicitud.origen === 'Interno' ? 'bg-primary' : 'bg-secondary'}`}>
@@ -68,11 +68,11 @@ export default function ModalVerDetalle({ solicitud, onClose, onCerrar }) {
                     <div className="d-flex align-items-center gap-2 mt-1 text-primary fw-bold">
                       <i className="bi bi-calendar-event fs-5"></i>
                       <span>{solicitud.fechaEntrevista}</span>
-                      <span className="badge bg-info-subtle text-info-emphasis border border-info-subtle small fw-normal">Agendada</span>
+                      <span className="badge bg-white text-primary border small fw-normal">Agendada</span>
                     </div>
                   ) : (
-                    <div className="d-flex align-items-center gap-2 mt-1 text-warning-emphasis">
-                      <i className="bi bi-calendar-x fs-5 text-warning"></i>
+                    <div className="d-flex align-items-center gap-2 mt-1 text-secondary">
+                      <i className="bi bi-calendar-x fs-5 text-muted"></i>
                       <span className="small fw-semibold">Sin entrevista agendada (Pendiente)</span>
                     </div>
                   )}
@@ -103,15 +103,15 @@ export default function ModalVerDetalle({ solicitud, onClose, onCerrar }) {
               </div>
               <div className="col-md-6">
                 <label className="form-label text-muted small mb-1 fw-semibold">Ciudad / Comuna</label>
-                <div>{solicitud.direccion || 'No registrada'}</div>
+                <div className="text-dark">{solicitud.direccion || 'No registrada'}</div>
               </div>
               <div className="col-md-6">
                 <label className="form-label text-muted small mb-1 fw-semibold">Teléfono de Contacto</label>
-                <div>{solicitud.contacto || 'No registrado'}</div>
+                <div className="text-dark">{solicitud.contacto || 'No registrado'}</div>
               </div>
               <div className="col-md-6">
                 <label className="form-label text-muted small mb-1 fw-semibold">Correo Electrónico</label>
-                <div>{solicitud.email || 'No registrado'}</div>
+                <div className="text-dark">{solicitud.email || 'No registrado'}</div>
               </div>
             </div>
 
@@ -126,26 +126,27 @@ export default function ModalVerDetalle({ solicitud, onClose, onCerrar }) {
             {/* Observaciones del Evaluador */}
             {solicitud.observacionesEvaluador && (
               <div className="mb-3 p-3 border rounded-3 bg-white">
-                <label className="form-label fw-semibold small text-primary mb-1">
-                  <i className="bi bi-chat-left-text me-1"></i>
-                  Observaciones Clínicas del Evaluador
+                <label className="form-label fw-semibold small text-primary mb-1 d-flex align-items-center gap-2">
+                  <i className="bi bi-chat-left-text"></i>
+                  <span>Observaciones Clínicas del Evaluador</span>
                 </label>
                 <p className="small mb-0 text-dark">{solicitud.observacionesEvaluador}</p>
               </div>
             )}
 
-            {/* Archivos Adjuntos */}
+            {/* Archivos Adjuntos (Diseño limpio y homogéneo sin botones rojos de peligro) */}
             <div>
               <label className="form-label fw-semibold small text-muted mb-2">Documentos Adjuntos</label>
               <div className="d-flex flex-wrap gap-2">
                 {solicitud.cvArchivo ? (
                   <button
                     type="button"
-                    className="btn btn-outline-danger btn-sm d-flex align-items-center gap-1"
+                    className="btn btn-sm btn-light border bg-white shadow-sm d-flex align-items-center gap-2 px-3 py-2 text-dark"
                     onClick={() => handleDescargar(solicitud.cvArchivo)}
+                    title="Descargar Currículum Vitae"
                   >
-                    <i className="bi bi-file-earmark-pdf"></i>
-                    <span>CV: {solicitud.cvArchivo}</span>
+                    <i className="bi bi-file-earmark-pdf text-danger fs-5"></i>
+                    <span className="small fw-semibold">CV: {solicitud.cvArchivo}</span>
                   </button>
                 ) : (
                   <span className="badge bg-light text-muted border py-2 px-3">Sin CV adjunto</span>
@@ -154,22 +155,24 @@ export default function ModalVerDetalle({ solicitud, onClose, onCerrar }) {
                 {solicitud.entrevistaArchivo && (
                   <button
                     type="button"
-                    className="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1"
+                    className="btn btn-sm btn-light border bg-white shadow-sm d-flex align-items-center gap-2 px-3 py-2 text-dark"
                     onClick={() => handleDescargar(solicitud.entrevistaArchivo)}
+                    title="Descargar Pauta de Entrevista"
                   >
-                    <i className="bi bi-file-earmark-text"></i>
-                    <span>Pauta: {solicitud.entrevistaArchivo}</span>
+                    <i className="bi bi-file-earmark-text text-primary fs-5"></i>
+                    <span className="small fw-semibold">Pauta: {solicitud.entrevistaArchivo}</span>
                   </button>
                 )}
 
                 {solicitud.informeArchivo && (
                   <button
                     type="button"
-                    className="btn btn-outline-success btn-sm d-flex align-items-center gap-1"
+                    className="btn btn-sm btn-light border bg-white shadow-sm d-flex align-items-center gap-2 px-3 py-2 text-dark"
                     onClick={() => handleDescargar(solicitud.informeArchivo)}
+                    title="Descargar Informe Psicolaboral"
                   >
-                    <i className="bi bi-file-earmark-check"></i>
-                    <span>Informe: {solicitud.informeArchivo}</span>
+                    <i className="bi bi-file-earmark-check text-success fs-5"></i>
+                    <span className="small fw-semibold">Informe: {solicitud.informeArchivo}</span>
                   </button>
                 )}
               </div>
@@ -177,10 +180,10 @@ export default function ModalVerDetalle({ solicitud, onClose, onCerrar }) {
           </div>
 
           {/* Pie */}
-          <div className="modal-footer bg-light py-2">
+          <div className="modal-footer bg-light py-2 border-top">
             <button
               type="button"
-              className="btn btn-secondary btn-sm px-4"
+              className="btn btn-outline-secondary btn-sm px-4"
               onClick={cerrarModal}
             >
               Cerrar

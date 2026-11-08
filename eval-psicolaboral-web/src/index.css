@@ -1,13 +1,35 @@
 :root {
-  --aqua-bg: #F9F6F0;             /* Fondo marfil cálido */
-  --aqua-card-bg: #FFFFFF;        /* Blanco limpio para tarjetas */
-  --aqua-text-dark: #1E2D38;      /* Azul pizarra casi negro */
-  --aqua-text-muted: #5F7382;     /* Azul grisáceo atenuado */
-  --aqua-border: #E8E2D8;         /* Borde sutil color arena */
-  --aqua-salmon: #E8633A;         /* Naranja salmón / cobre */
-  --aqua-slate: #4A697B;          /* Azul denim del salmón grabado */
+  /* ==========================================================================
+     PALETA CORPORATIVA AQUACHILE
+     ========================================================================== */
+  --aqua-salmon: #E8633A;         /* Naranja salmón principal */
+  --aqua-salmon-hover: #D2532C;   /* Salmón oscuro al presionar */
+  --aqua-slate: #3B5A6F;          /* Azul pizarra fiordo corporativo */
+  --aqua-slate-hover: #2B4353;    /* Azul pizarra oscuro */
+  --aqua-bg: #F8F6F2;             /* Fondo marfil suave y cálido */
+  --aqua-card-bg: #FFFFFF;        /* Blanco puro para tarjetas */
+  --aqua-text-dark: #1E2D38;      /* Azul pizarra casi negro para títulos */
+  --aqua-text-muted: #677A88;     /* Texto secundario sobrio */
+  --aqua-border: #E5DFD5;         /* Borde sutil arena */
+  --aqua-nav-dark: #1A2832;
+
+  /* Sobrescritura de Bootstrap 5 (Base y Fondos Subtle) */
+  --bs-primary: #E8633A;
+  --bs-primary-rgb: 232, 99, 58;
+  --bs-link-color: #E8633A;
+  --bs-link-hover-color: #D2532C;
+
+  /* Fondos Subtle Neutros */
+  --bs-primary-bg-subtle: #FDF0EB !important;
+  --bs-primary-border-subtle: #FAD7C8 !important;
+  --bs-primary-text-emphasis: #C05621 !important;
+
+  --bs-info-bg-subtle: #E8EFF3 !important;
+  --bs-info-border-subtle: #C8D7E1 !important;
+  --bs-info-text-emphasis: #253B48 !important;
 }
 
+/* 1. Fondo general cálido */
 body {
   background-color: var(--aqua-bg);
   color: var(--aqua-text-dark);
@@ -16,7 +38,287 @@ body {
   min-height: 100vh;
 }
 
-/* Tarjetas limpias estilo editorial */
+/* 2. Navbar: Blanco editorial y luminoso */
+.navbar.bg-dark {
+  background-color: #FFFFFF !important;
+  border-bottom: 1px solid var(--aqua-border) !important;
+  box-shadow: 0 2px 10px rgba(30, 45, 56, 0.04) !important;
+}
+
+.navbar.bg-dark .navbar-brand {
+  color: var(--aqua-text-dark) !important;
+}
+
+.navbar.bg-dark .text-white {
+  color: var(--aqua-text-dark) !important;
+}
+
+.navbar.bg-dark .btn-outline-light {
+  color: var(--aqua-slate) !important;
+  border-color: var(--aqua-border) !important;
+  background-color: #FAF8F5 !important;
+  font-weight: 500;
+}
+
+.navbar.bg-dark .btn-outline-light:hover {
+  background-color: #EFEBE4 !important;
+  color: var(--aqua-text-dark) !important;
+}
+
+.navbar.bg-dark .badge.bg-secondary {
+  background-color: #EFF3F6 !important;
+  color: var(--aqua-slate) !important;
+  border: 1px solid #D6E0E6 !important;
+  font-weight: 600;
+}
+
+/* 3. Textos e Íconos Primarios (Naranja Salmón de Acento) */
+.text-primary {
+  color: var(--aqua-salmon) !important;
+}
+
+/* 4. Botones Primarios de Acción Principal (+ Registrar Nueva Solicitud, Guardar) */
+.btn-primary {
+  background-color: var(--aqua-salmon) !important;
+  border-color: var(--aqua-salmon) !important;
+  color: #FFFFFF !important;
+  font-weight: 600;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(232, 99, 58, 0.25);
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+  background-color: var(--aqua-salmon-hover) !important;
+  border-color: var(--aqua-salmon-hover) !important;
+  color: #FFFFFF !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(232, 99, 58, 0.35);
+}
+
+/* 5. Botón "Evaluar" (Azul Pizarra Fiordo) */
+.btn-outline-primary {
+  color: var(--aqua-slate) !important;
+  border-color: var(--aqua-slate) !important;
+  background-color: transparent !important;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active,
+.btn-outline-primary.active {
+  background-color: var(--aqua-slate) !important;
+  border-color: var(--aqua-slate) !important;
+  color: #FFFFFF !important;
+}
+
+/* 6. Pestañas Superiores del Panel */
+.btn-group .btn-primary,
+.nav-pills .nav-link.active {
+  background-color: var(--aqua-slate) !important;
+  border-color: var(--aqua-slate) !important;
+  color: #FFFFFF !important;
+}
+
+.nav-pills .nav-link {
+  color: var(--aqua-slate);
+}
+
+/* 7. Paginación de Tablas */
+.page-item.active .page-link {
+  background-color: var(--aqua-salmon) !important;
+  border-color: var(--aqua-salmon) !important;
+  color: #FFFFFF !important;
+}
+
+.page-link {
+  color: var(--aqua-salmon);
+}
+
+.page-link:hover {
+  color: var(--aqua-salmon-hover);
+}
+
+/* 8. Insignias "Subtle" Generales (Desarrollo Profesional, Casa Matriz) */
+.bg-primary-subtle {
+  background-color: #FDF0EB !important;
+  color: var(--aqua-salmon) !important;
+  border: 1px solid #FAD7C8 !important;
+}
+
+.border-primary-subtle {
+  border-color: #FAD7C8 !important;
+}
+
+/* 9. Insignias de Estado del Proceso */
+
+/* Estado "Pendiente": Ámbar arena suave */
+.badge.bg-warning,
+.badge-pendiente {
+  background-color: #FEF6E4 !important;
+  color: #8C5B06 !important;
+  border: 1px solid #F7E1B5 !important;
+  font-weight: 600;
+}
+
+/* Estado "En proceso": Azul Pizarra Marino tenue */
+.badge.bg-info,
+.badge-proceso,
+.bg-info-subtle {
+  background-color: #E8EFF3 !important;
+  color: var(--aqua-slate) !important;
+  border: 1px solid #C8D7E1 !important;
+  font-weight: 600;
+}
+
+/* Estado "Finalizada": Verde Salvia sobrio */
+.badge.bg-success,
+.badge-finalizada {
+  background-color: #EBF5EE !important;
+  color: #1F6B2E !important;
+  border: 1px solid #CEE8D3 !important;
+  font-weight: 600;
+}
+
+/* 10. Ajustes Específicos para la Tabla de Postulaciones */
+
+/* Etiqueta "Interno": Azul Pizarra institucional tenue (Cero sensación de error) */
+.table .badge.bg-primary,
+.table .badge.bg-primary-subtle {
+  background-color: #EAF0F6 !important;
+  color: var(--aqua-slate) !important;
+  border: 1px solid #CCDCE8 !important;
+  font-weight: 600;
+}
+
+/* Etiqueta "Externo": Gris neutro suave */
+.table .badge.bg-secondary {
+  background-color: #EFF2F5 !important;
+  color: #556270 !important;
+  border: 1px solid #E2E8F0 !important;
+  font-weight: 500;
+}
+
+/* Fechas de entrevista agendadas: Armonizadas con 'En proceso' (Cero rojo de alarma) */
+.table td .text-primary,
+.table td i.bi-calendar,
+.table td i.bi-calendar-event {
+  color: var(--aqua-slate) !important;
+  font-weight: 500;
+}
+
+/* 11. Enfoque Limpio en Formularios */
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--aqua-salmon) !important;
+  box-shadow: 0 0 0 0.2rem rgba(232, 99, 58, 0.15) !important;
+  outline: none;
+}
+
+/* 12. Tarjetas y Tablas */
+.card {
+  border: 1px solid var(--aqua-border) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 3px 12px rgba(30, 45, 56, 0.04) !important;
+}
+
+.table thead th {
+  background-color: #F7F4EE !important;
+  color: var(--aqua-text-muted) !important;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--aqua-border) !important;
+}
+
+/* 13. Píldora del Hero de Inicio (Vidrio esmerilado translúcido) */
+.badge-hero-aquachile {
+  background: rgba(255, 255, 255, 0.15) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  color: #FFFFFF !important;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  padding: 8px 18px !important;
+  border-radius: 50px !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.badge-hero-aquachile i {
+  color: var(--aqua-salmon) !important;
+}
+
+/* 14. Insignias de Roles de Usuario */
+.badge-rol-admin {
+  background-color: var(--aqua-slate) !important;
+  color: #FFFFFF !important;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 5px 10px;
+  border-radius: 4px;
+}
+
+.badge-rol-analista {
+  background-color: #EDF2F7 !important;
+  color: #2D3748 !important;
+  border: 1px solid #CBD5E0 !important;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 4px;
+}
+
+.badge-rol-evaluador {
+  background-color: #FDF2ED !important;
+  color: #C05621 !important;
+  border: 1px solid #FBD38D !important;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 4px;
+}
+
+.badge-sesion-activa {
+  background-color: transparent !important;
+  color: var(--aqua-salmon) !important;
+  border: 1px solid var(--aqua-salmon) !important;
+  font-weight: 500;
+  font-size: 0.72rem;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+/* 15. Documentos Adjuntos en Ficha / Modales */
+.btn-documento-adjunto {
+  background-color: #FFFFFF !important;
+  border: 1px solid #D1D5DB !important;
+  color: var(--aqua-text-dark) !important;
+  font-weight: 500;
+  font-size: 0.85rem;
+  padding: 6px 14px;
+  border-radius: 5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.btn-documento-adjunto:hover {
+  background-color: #F8FAFC !important;
+  border-color: var(--aqua-slate) !important;
+  color: var(--aqua-slate) !important;
+}
+
+.btn-documento-adjunto i.bi-file-earmark-pdf,
+.btn-documento-adjunto i.bi-file-pdf {
+  color: #B91C1C;
+}
+
+/* 16. Clases Auxiliares de Estilo AquaChile */
 .card-aquachile {
   background-color: var(--aqua-card-bg);
   border: 1px solid var(--aqua-border);
@@ -24,7 +326,6 @@ body {
   box-shadow: 0 4px 12px rgba(30, 45, 56, 0.03);
 }
 
-/* Botón estilo contorno AquaChile ("Conoce más") */
 .btn-aqua-outline {
   background-color: transparent;
   color: var(--aqua-salmon);
@@ -42,7 +343,6 @@ body {
   color: #FFFFFF;
 }
 
-/* Botón sólido sutil */
 .btn-aqua-solid {
   background-color: var(--aqua-slate);
   border: 1.5px solid var(--aqua-slate);
@@ -55,37 +355,11 @@ body {
 }
 
 .btn-aqua-solid:hover {
-  background-color: #3b5564;
-  border-color: #3b5564;
+  background-color: #2b4353;
+  border-color: #2b4353;
   color: #FFFFFF;
 }
 
-/* Encabezado limpio */
-.navbar-aquachile {
-  background-color: #FFFFFF;
-  border-bottom: 1px solid var(--aqua-border);
-}
-
-/* Badges redondeados sutiles */
-.badge-pendiente {
-  background-color: #FFF3CD;
-  color: #856404;
-  border: 1px solid #FFEEBA;
-}
-
-.badge-proceso {
-  background-color: #D1ECF1;
-  color: #0C5460;
-  border: 1px solid #BEE5EB;
-}
-
-.badge-finalizada {
-  background-color: #D4EDDA;
-  color: #155724;
-  border: 1px solid #C3E6CB;
-}
-
-/* Botón de acción principal (CTA) estilo AquaChile */
 .btn-aqua-cta {
   background-color: var(--aqua-salmon);
   border: none;
@@ -98,21 +372,45 @@ body {
 }
 
 .btn-aqua-cta:hover {
-  background-color: #d2532c;
+  background-color: var(--aqua-salmon-hover);
   color: #FFFFFF;
   transform: translateY(-1px);
   box-shadow: 0 6px 18px rgba(232, 99, 58, 0.45);
 }
 
-.btn-aqua-cta:active {
-  transform: translateY(0);
+/* ==========================================================================
+   TARJETAS DE MÉTRICAS / RESUMEN (KPIs ARMONIZADOS)
+   ========================================================================== */
+
+/* En Proceso: Azul Pizarra Fiordo (elimina el cian neón) */
+.text-info {
+  color: var(--aqua-slate) !important;
 }
 
+.border-info {
+  border-color: var(--aqua-slate) !important;
+}
 
-/* Enfoque limpio en inputs y selectores (sin halos flúor ni brillos) */
-.form-control:focus,
-.form-select:focus {
-  border-color: var(--aqua-slate); /* Cambia a azul pizarra sobrio */
-  box-shadow: none;                /* Elimina por completo el halo de luz */
-  outline: none;
+/* Pendientes: Ámbar cobre / mostaza cálido (elimina el amarillo chillón) */
+.text-warning {
+  color: #C07D2B !important;
+}
+
+.border-warning {
+  border-color: #E2A05B !important;
+}
+
+/* Finalizadas: Verde bosque templado */
+.text-success {
+  color: #2D6A4F !important;
+}
+
+.border-success {
+  border-color: #52B788 !important;
+}
+
+/* Total: Grafito azulado */
+.border-secondary,
+.border-dark {
+  border-color: var(--aqua-text-dark) !important;
 }

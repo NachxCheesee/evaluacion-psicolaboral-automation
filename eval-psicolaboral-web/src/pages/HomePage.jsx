@@ -39,8 +39,9 @@ export default function HomePage() {
         }}
       >
         <div className="container py-4 text-center">
-          <div className="d-inline-flex align-items-center gap-2 bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 rounded-pill small fw-semibold text-uppercase mb-3">
-            <i className="bi bi-award"></i>
+          {/* Píldora sutil con efecto vidrio translúcido */}
+          <div className="badge-hero-aquachile d-inline-flex align-items-center gap-2 small fw-semibold text-uppercase mb-3">
+            <i className="bi bi-award fs-6"></i>
             <span>Líder en Acuicultura Sustentable y Producción Austral</span>
           </div>
 
@@ -278,9 +279,10 @@ export default function HomePage() {
       >
         <div className="container py-3">
           <div className="text-center mb-5">
-            <span className="badge bg-primary text-white text-uppercase fw-semibold px-3 py-1 mb-2">
-              Distribución Territorial
-            </span>
+            <div className="badge-hero-aquachile d-inline-flex align-items-center gap-2 small fw-semibold text-uppercase mb-2">
+              <i className="bi bi-compass"></i>
+              <span>Distribución Territorial</span>
+            </div>
             <h2 className="fw-bold text-white mb-2">Presencia en el Sur Austral</h2>
             <p className="mx-auto" style={{ maxWidth: '600px', color: '#cbd5e1' }}>
               Instalaciones estratégicas diseñadas para responder a la geografía y logística austral de Chile.
