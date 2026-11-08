@@ -1,212 +1,189 @@
-export default function ModalVerDetalle({ solicitud, onCerrar }) {
+import React, { useEffect } from 'react';
+
+export default function ModalVerDetalle({ solicitud, onClose, onCerrar }) {
+  const cerrarModal = onClose || onCerrar || (() => {});
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') cerrarModal();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [cerrarModal]);
+
   if (!solicitud) return null;
 
+  const handleDescargar = (nombreArchivo) => {
+    alert(`Descargando archivo simulado: ${nombreArchivo}`);
+  };
+
   return (
-    <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(30,45,56,0.5)" }}>
-      <div className="modal-dialog modal-dialog-centered modal-lg">
-        <div className="modal-content card-aquachile border-0 shadow-lg">
-          <div className="modal-header border-bottom py-3">
-            <div>
-              <small className="text-uppercase fw-semibold" style={{ color: "var(--aqua-salmon)", fontSize: "0.75rem" }}>
-                Expediente Consolidado del Postulante
-              </small>
-              <h5 className="modal-title fs-5 fw-bold mb-0" style={{ color: "var(--aqua-text-dark)" }}>
-                {solicitud.candidato}
-                <span className="badge bg-light text-secondary border fw-normal fs-6 ms-2">
-                  RUT: {solicitud.rut || "Sin RUT"}
-                </span>
-              </h5>
-            </div>
-            <button type="button" className="btn-close" onClick={onCerrar}></button>
+    <div
+      className="modal show d-block"
+      tabIndex="-1"
+      role="dialog"
+      style={{ backgroundColor: 'rgba(0, 0, 0, 0.65)', zIndex: 1055 }}
+      onClick={cerrarModal}
+    >
+      <div
+        className="modal-dialog modal-lg modal-dialog-centered"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="modal-content border-0 shadow-lg rounded-3">
+          {/* Cabecera */}
+          <div className="modal-header bg-light py-3">
+            <h5 className="modal-title fw-bold text-primary mb-0">
+              <i className="bi bi-file-earmark-person me-2"></i>
+              Expediente del Postulante
+            </h5>
+            <button
+              type="button"
+              className="btn-close"
+              aria-label="Cerrar"
+              onClick={cerrarModal}
+            ></button>
           </div>
 
-          <div className="modal-body py-4">
-            <div className="row g-3">
-              <div className="col-12 col-md-6">
-                <small className="text-muted text-uppercase fw-semibold d-block">Cargo y Familia</small>
-                <span className="fw-semibold text-dark">{solicitud.cargo}</span>
-                <span className="text-muted d-block small">{solicitud.familiaCargo}</span>
+          {/* Cuerpo */}
+          <div className="modal-body p-4">
+            <div className="d-flex justify-content-between align-items-start mb-3 pb-3 border-bottom">
+              <div>
+                <h5 className="mb-1 fw-bold text-dark">{solicitud.candidato}</h5>
+                <span className="text-muted small">RUT: {solicitud.rut}</span>
               </div>
-
-              <div className="col-12 col-md-6">
-                <small className="text-muted text-uppercase fw-semibold d-block">Estado Actual</small>
-                <span className="badge px-2 py-1 mt-1 bg-secondary text-white">
-                  {solicitud.estado}
+              <div className="d-flex gap-2">
+                <span className={`badge ${solicitud.origen === 'Interno' ? 'bg-primary' : 'bg-secondary'}`}>
+                  {solicitud.origen || 'Externo'}
                 </span>
+                <span className="badge bg-dark">{solicitud.estado}</span>
               </div>
+            </div>
 
-              <div className="col-12 col-md-6">
-                <small className="text-muted text-uppercase fw-semibold d-block">Contacto</small>
-                <div>{solicitud.correo}</div>
-                <div className="text-muted small">{solicitud.telefono}</div>
-              </div>
-
-              <div className="col-12 col-md-6">
-                <small className="text-muted text-uppercase fw-semibold d-block">Dirección de Residencia</small>
-                <span className="text-dark">{solicitud.direccion || "No informada"}</span>
-              </div>
-
-              <div className="col-12 col-md-6">
-                <small className="text-muted text-uppercase fw-semibold d-block">Ingresado Por</small>
-                <span>{solicitud.solicitadoPor}</span>
-                <small className="text-muted d-block">Fecha Solicitud: {solicitud.fechaSolicitud}</small>
-              </div>
-
-              <div className="col-12 col-md-6">
-                <small className="text-muted text-uppercase fw-semibold d-block">Evaluador Asignado</small>
-                <span>{solicitud.responsable}</span>
-              </div>
-
-              {/* SECCIÓN DOCUMENTAL: BOTONES EXPLÍCITOS DE DESCARGA */}
-              <div className="col-12">
-                <div className="p-3 rounded border bg-light">
-                  <small className="text-muted text-uppercase fw-bold d-block mb-3" style={{ fontSize: "0.75rem" }}>
-                    Expediente Documental Adjunto (Descarga Directa)
-                  </small>
-                  
-                  <div className="row g-3">
-                    {/* 1. CV */}
-                    <div className="col-12 col-md-4">
-                      <div className="p-3 border rounded bg-white h-100 d-flex flex-column justify-content-between shadow-sm">
-                        <div>
-                          <small className="text-muted text-uppercase fw-bold d-block" style={{ fontSize: "0.7rem" }}>
-                            Currículum Vitae
-                          </small>
-                          <div className="text-dark small fw-semibold text-truncate my-1" title={solicitud.cvAdjunto}>
-                            📄 {solicitud.cvAdjunto || "Sin archivo"}
-                          </div>
-                        </div>
-
-                        {solicitud.cvAdjunto && solicitud.cvAdjunto !== "Sin archivo adjunto" ? (
-                          <button
-                            type="button"
-                            className="btn btn-sm btn-outline-secondary w-100 mt-2 fw-semibold"
-                            style={{ fontSize: "0.8rem", borderRadius: "3px" }}
-                            onClick={() => alert(`Simulación: Descargando CV "${solicitud.cvAdjunto}"...`)}
-                          >
-                            ⬇ Descargar CV
-                          </button>
-                        ) : (
-                          <button disabled className="btn btn-sm btn-light border text-muted w-100 mt-2" style={{ fontSize: "0.8rem" }}>
-                            No disponible
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* 2. Transcripción */}
-                    <div className="col-12 col-md-4">
-                      <div className="p-3 border rounded bg-white h-100 d-flex flex-column justify-content-between shadow-sm">
-                        <div>
-                          <small className="text-muted text-uppercase fw-bold d-block" style={{ fontSize: "0.7rem" }}>
-                            Transcripción Entrevista
-                          </small>
-                          <div className="text-dark small fw-semibold text-truncate my-1" title={solicitud.evaluacion?.archivoTranscripcion}>
-                            📝 {solicitud.evaluacion?.archivoTranscripcion || "Sin transcripción"}
-                          </div>
-                        </div>
-
-                        {solicitud.evaluacion?.archivoTranscripcion ? (
-                          <button
-                            type="button"
-                            className="btn btn-sm btn-outline-secondary w-100 mt-2 fw-semibold"
-                            style={{ fontSize: "0.8rem", borderRadius: "3px" }}
-                            onClick={() => alert(`Simulación: Descargando transcripción "${solicitud.evaluacion.archivoTranscripcion}"...`)}
-                          >
-                            ⬇ Descargar Pauta
-                          </button>
-                        ) : (
-                          <button disabled className="btn btn-sm btn-light border text-muted w-100 mt-2" style={{ fontSize: "0.8rem" }}>
-                            Pendiente
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* 3. Informe Final */}
-                    <div className="col-12 col-md-4">
-                      <div className="p-3 border rounded bg-white h-100 d-flex flex-column justify-content-between shadow-sm">
-                        <div>
-                          <small className="text-muted text-uppercase fw-bold d-block" style={{ fontSize: "0.7rem" }}>
-                            Informe Psicolaboral
-                          </small>
-                          <div className="text-dark small fw-semibold text-truncate my-1" title={solicitud.evaluacion?.archivoInformeFinal}>
-                            📊 {solicitud.evaluacion?.archivoInformeFinal || "Sin informe"}
-                          </div>
-                        </div>
-
-                        {solicitud.evaluacion?.archivoInformeFinal ? (
-                          <button
-                            type="button"
-                            className="btn btn-sm btn-aqua-solid w-100 mt-2 fw-semibold"
-                            style={{ fontSize: "0.8rem", borderRadius: "3px" }}
-                            onClick={() => alert(`Simulación: Descargando informe final "${solicitud.evaluacion.archivoInformeFinal}"...`)}
-                          >
-                            ⬇ Descargar Informe
-                          </button>
-                        ) : (
-                          <button disabled className="btn btn-sm btn-light border text-muted w-100 mt-2" style={{ fontSize: "0.8rem" }}>
-                            Sin emitir
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Dictamen Psicolaboral */}
-              <div className="col-12">
-                <div className="p-3 rounded border" style={{ backgroundColor: "#F7F9FA" }}>
-                  <div className="d-flex justify-content-between align-items-center mb-2">
-                    <small className="text-uppercase fw-bold text-muted" style={{ fontSize: "0.75rem" }}>
-                      Dictamen Psicolaboral
-                    </small>
-                    {solicitud.evaluacion?.fechaEntrevista && (
-                      <span className="badge bg-white text-dark border fw-normal">
-                        📅 Entrevista: <strong>{solicitud.evaluacion.fechaEntrevista}</strong>
-                      </span>
-                    )}
-                  </div>
-
-                  {solicitud.evaluacion?.resultado ? (
-                    <div>
-                      <div className="small mb-2">
-                        <strong>Resultado Final:</strong>{" "}
-                        <span className="badge bg-dark text-white px-2 py-1 ms-1">
-                          {solicitud.evaluacion.resultado}
-                        </span>
-                      </div>
-                      <small className="text-muted d-block fw-semibold mb-1">Conclusiones del Informe:</small>
-                      <p className="mb-0 text-dark small" style={{ whiteSpace: "pre-wrap" }}>
-                        {solicitud.evaluacion.observacionesEvaluador || "Sin observaciones adicionales."}
-                      </p>
+            {/* SECCIÓN DE ESTADO DE ENTREVISTA Y EVALUACIÓN */}
+            <div className="mb-3 p-3 bg-light rounded-3 border">
+              <div className="row g-2 align-items-center">
+                <div className="col-12 col-md-6 border-end-md">
+                  <span className="text-muted small fw-semibold d-block">Fecha de Entrevista Psicolaboral:</span>
+                  {solicitud.fechaEntrevista ? (
+                    <div className="d-flex align-items-center gap-2 mt-1 text-primary fw-bold">
+                      <i className="bi bi-calendar-event fs-5"></i>
+                      <span>{solicitud.fechaEntrevista}</span>
+                      <span className="badge bg-info-subtle text-info-emphasis border border-info-subtle small fw-normal">Agendada</span>
                     </div>
                   ) : (
-                    <span className="text-muted small fst-italic">
-                      El proceso aún no cuenta con dictamen psicolaboral emitido.
-                    </span>
+                    <div className="d-flex align-items-center gap-2 mt-1 text-warning-emphasis">
+                      <i className="bi bi-calendar-x fs-5 text-warning"></i>
+                      <span className="small fw-semibold">Sin entrevista agendada (Pendiente)</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="col-12 col-md-6 ps-md-3">
+                  <span className="text-muted small fw-semibold d-block">Estado del Dictamen:</span>
+                  {solicitud.resultado ? (
+                    <div className="d-flex align-items-center gap-2 mt-1 text-success fw-bold">
+                      <i className="bi bi-check-circle-fill"></i>
+                      <span>{solicitud.resultado}</span>
+                    </div>
+                  ) : (
+                    <div className="d-flex align-items-center gap-2 mt-1 text-secondary">
+                      <i className="bi bi-hourglass-split"></i>
+                      <span className="small">Pendiente de evaluación</span>
+                    </div>
                   )}
                 </div>
               </div>
+            </div>
 
-              {/* Observaciones generales */}
-              <div className="col-12">
-                <div className="p-3 bg-light rounded border">
-                  <small className="text-muted text-uppercase fw-semibold d-block mb-1">
-                    Observaciones Iniciales del Analista
-                  </small>
-                  <p className="mb-0 text-dark small" style={{ whiteSpace: "pre-wrap" }}>
-                    {solicitud.observaciones || "Sin observaciones registradas."}
-                  </p>
-                </div>
+            {/* Datos Personales y de Cargo */}
+            <div className="row g-3 mb-3">
+              <div className="col-md-6">
+                <label className="form-label text-muted small mb-1 fw-semibold">Cargo de Postulación</label>
+                <div className="fw-semibold text-dark">{solicitud.cargo}</div>
+              </div>
+              <div className="col-md-6">
+                <label className="form-label text-muted small mb-1 fw-semibold">Ciudad / Comuna</label>
+                <div>{solicitud.direccion || 'No registrada'}</div>
+              </div>
+              <div className="col-md-6">
+                <label className="form-label text-muted small mb-1 fw-semibold">Teléfono de Contacto</label>
+                <div>{solicitud.contacto || 'No registrado'}</div>
+              </div>
+              <div className="col-md-6">
+                <label className="form-label text-muted small mb-1 fw-semibold">Correo Electrónico</label>
+                <div>{solicitud.email || 'No registrado'}</div>
+              </div>
+            </div>
+
+            {/* Observaciones Generales */}
+            {solicitud.observaciones && (
+              <div className="mb-3 p-3 bg-light rounded-3 border">
+                <label className="form-label fw-semibold small text-muted mb-1">Observaciones / Experiencia Laboral</label>
+                <p className="small mb-0 text-dark">{solicitud.observaciones}</p>
+              </div>
+            )}
+
+            {/* Observaciones del Evaluador */}
+            {solicitud.observacionesEvaluador && (
+              <div className="mb-3 p-3 border rounded-3 bg-white">
+                <label className="form-label fw-semibold small text-primary mb-1">
+                  <i className="bi bi-chat-left-text me-1"></i>
+                  Observaciones Clínicas del Evaluador
+                </label>
+                <p className="small mb-0 text-dark">{solicitud.observacionesEvaluador}</p>
+              </div>
+            )}
+
+            {/* Archivos Adjuntos */}
+            <div>
+              <label className="form-label fw-semibold small text-muted mb-2">Documentos Adjuntos</label>
+              <div className="d-flex flex-wrap gap-2">
+                {solicitud.cvArchivo ? (
+                  <button
+                    type="button"
+                    className="btn btn-outline-danger btn-sm d-flex align-items-center gap-1"
+                    onClick={() => handleDescargar(solicitud.cvArchivo)}
+                  >
+                    <i className="bi bi-file-earmark-pdf"></i>
+                    <span>CV: {solicitud.cvArchivo}</span>
+                  </button>
+                ) : (
+                  <span className="badge bg-light text-muted border py-2 px-3">Sin CV adjunto</span>
+                )}
+
+                {solicitud.entrevistaArchivo && (
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1"
+                    onClick={() => handleDescargar(solicitud.entrevistaArchivo)}
+                  >
+                    <i className="bi bi-file-earmark-text"></i>
+                    <span>Pauta: {solicitud.entrevistaArchivo}</span>
+                  </button>
+                )}
+
+                {solicitud.informeArchivo && (
+                  <button
+                    type="button"
+                    className="btn btn-outline-success btn-sm d-flex align-items-center gap-1"
+                    onClick={() => handleDescargar(solicitud.informeArchivo)}
+                  >
+                    <i className="bi bi-file-earmark-check"></i>
+                    <span>Informe: {solicitud.informeArchivo}</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>
 
-          <div className="modal-footer border-top py-2">
-            <button type="button" className="btn btn-sm btn-outline-secondary px-3" onClick={onCerrar}>
-              Cerrar Expediente
+          {/* Pie */}
+          <div className="modal-footer bg-light py-2">
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm px-4"
+              onClick={cerrarModal}
+            >
+              Cerrar
             </button>
           </div>
         </div>

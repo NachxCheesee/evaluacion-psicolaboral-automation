@@ -1,108 +1,180 @@
-import { useState } from "react";
+import React, { useState, useEffect } from 'react';
 
-export default function ModalEditarUsuario({ usuario, onGuardar, onCerrar }) {
-  const [nombre, setNombre] = useState("");
-  const [correo, setCorreo] = useState("");
-  const [rol, setRol] = useState("ANALISTA");
-  const [password, setPassword] = useState("");
+export default function ModalEditarUsuario({ usuario, onClose, onCerrar, onGuardarEdicion }) {
+  const cerrarModal = onClose || onCerrar || (() => {});
 
-  // Sincroniza el formulario cuando cambia el usuario (patrón de React)
-  const [usuarioPrevio, setUsuarioPrevio] = useState(null);
-  if (usuario !== usuarioPrevio) {
-    setUsuarioPrevio(usuario);
-    if (usuario) {
-      setNombre(usuario.nombre || "");
-      setCorreo(usuario.correo || "");
-      setRol(usuario.rol || "ANALISTA");
-      setPassword(usuario.password || "123");
-    }
-  }
+  const [formData, setFormData] = useState({
+    nombre: usuario?.nombre || '',
+    correo: usuario?.correo || '',
+    rol: usuario?.rol || 'ANALISTA',
+    nuevaPassword: '',
+    confirmarPassword: ''
+  });
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') cerrarModal();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [cerrarModal]);
 
   if (!usuario) return null;
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (error) setError('');
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    onGuardar({
+    setError('');
+
+    // Validación si decidió cambiar contraseña
+    if (formData.nuevaPassword.trim() || formData.confirmarPassword.trim()) {
+      if (formData.nuevaPassword !== formData.confirmarPassword) {
+        setError('Las nuevas contraseñas no coinciden.');
+        return;
+      }
+    }
+
+    onGuardarEdicion({
       ...usuario,
-      nombre: nombre.trim(),
-      correo: correo.trim().toLowerCase(),
-      rol,
-      password: password.trim() || "123",
-      tituloRol:
-        rol === "ANALISTA"
-          ? "Analista de Reclutamiento"
-          : rol === "EVALUADOR"
-          ? "Profesional Evaluador"
-          : "Administrador de Sistemas"
+      nombre: formData.nombre.trim(),
+      correo: formData.correo.trim().toLowerCase(),
+      rol: formData.rol,
+      password: formData.nuevaPassword.trim() ? formData.nuevaPassword : usuario.password
     });
   };
 
   return (
-    <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(30,45,56,0.5)" }}>
-      <div className="modal-dialog modal-dialog-centered">
-        <div className="modal-content card-aquachile border-0 shadow-lg">
-          <div className="modal-header border-bottom py-3">
-            <h5 className="modal-title fs-6 fw-bold" style={{ color: "var(--aqua-text-dark)" }}>
-              Editar Usuario Institucional
+    <div
+      className="modal show d-block"
+      tabIndex="-1"
+      role="dialog"
+      style={{ backgroundColor: 'rgba(0, 0, 0, 0.65)', zIndex: 1055 }}
+      onClick={cerrarModal}
+    >
+      <div
+        className="modal-dialog modal-dialog-centered"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="modal-content border-0 shadow-lg rounded-3">
+          <div className="modal-header bg-light py-3">
+            <h5 className="modal-title fw-bold text-dark mb-0">
+              <i className="bi bi-pencil-square text-primary me-2"></i>
+              Editar Funcionario
             </h5>
-            <button type="button" className="btn-close" onClick={onCerrar}></button>
+            <button
+              type="button"
+              className="btn-close"
+              aria-label="Cerrar"
+              onClick={cerrarModal}
+            ></button>
           </div>
 
           <form onSubmit={handleSubmit}>
-            <div className="modal-body py-3">
+            <div className="modal-body p-4">
+              {error && (
+                <div className="alert alert-danger py-2 small d-flex align-items-center gap-2 mb-3">
+                  <i className="bi bi-exclamation-triangle-fill"></i>
+                  <span>{error}</span>
+                </div>
+              )}
+
               <div className="mb-3">
-                <label className="form-label small fw-semibold text-muted">Nombre Completo *</label>
+                <label className="form-label small fw-semibold">Nombre Completo *</label>
                 <input
                   type="text"
-                  className="form-control"
+                  name="nombre"
+                  className="form-control form-control-sm"
+                  value={formData.nombre}
+                  onChange={handleChange}
                   required
-                  value={nombre}
-                  onChange={(e) => setNombre(e.target.value)}
                 />
               </div>
 
               <div className="mb-3">
-                <label className="form-label small fw-semibold text-muted">Correo Electrónico *</label>
+                <label className="form-label small fw-semibold">Correo Institucional *</label>
                 <input
                   type="email"
-                  className="form-control"
+                  name="correo"
+                  className="form-control form-control-sm"
+                  value={formData.correo}
+                  onChange={handleChange}
                   required
-                  value={correo}
-                  onChange={(e) => setCorreo(e.target.value)}
                 />
               </div>
 
-              <div className="row g-2 mb-2">
-                <div className="col-12 col-md-6">
-                  <label className="form-label small fw-semibold text-muted">Rol de Acceso *</label>
-                  <select
-                    className="form-select"
-                    value={rol}
-                    onChange={(e) => setRol(e.target.value)}
-                  >
-                    <option value="ANALISTA">Analista</option>
-                    <option value="EVALUADOR">Evaluador</option>
-                    <option value="ADMIN">Administrador</option>
-                  </select>
+              <div className="mb-3">
+                <label className="form-label small fw-semibold">Rol del Sistema *</label>
+                <select
+                  name="rol"
+                  className="form-select form-select-sm"
+                  value={formData.rol}
+                  onChange={handleChange}
+                >
+                  <option value="ANALISTA">ANALISTA</option>
+                  <option value="EVALUADOR">EVALUADOR</option>
+                  <option value="ADMIN">ADMIN</option>
+                </select>
+              </div>
+
+              {/* Sección de cambio de contraseña opcional y verificada */}
+              <div className="p-3 bg-light rounded-3 border mt-3">
+                <div className="small fw-semibold text-dark mb-1">
+                  <i className="bi bi-shield-lock me-1 text-primary"></i>
+                  Cambiar Contraseña (Opcional)
                 </div>
-                <div className="col-12 col-md-6">
-                  <label className="form-label small fw-semibold text-muted">Contraseña *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
+                <div className="text-muted small mb-2" style={{ fontSize: '0.8rem' }}>
+                  Deja estos campos en blanco si deseas mantener la contraseña actual.
                 </div>
+
+                <div className="row g-2">
+                  <div className="col-12 col-md-6">
+                    <input
+                      type="password"
+                      name="nuevaPassword"
+                      className="form-control form-control-sm"
+                      placeholder="Nueva contraseña"
+                      value={formData.nuevaPassword}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div className="col-12 col-md-6">
+                    <input
+                      type="password"
+                      name="confirmarPassword"
+                      className={`form-control form-control-sm ${
+                        formData.confirmarPassword && formData.nuevaPassword !== formData.confirmarPassword
+                          ? 'is-invalid'
+                          : ''
+                      }`}
+                      placeholder="Repetir nueva contraseña"
+                      value={formData.confirmarPassword}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
+                {formData.confirmarPassword && formData.nuevaPassword !== formData.confirmarPassword && (
+                  <div className="text-danger small mt-1" style={{ fontSize: '0.78rem' }}>
+                    Las nuevas contraseñas no coinciden.
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="modal-footer border-top py-2">
-              <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onCerrar}>
+            <div className="modal-footer bg-light py-2">
+              <button
+                type="button"
+                className="btn btn-outline-secondary btn-sm px-3"
+                onClick={cerrarModal}
+              >
                 Cancelar
               </button>
-              <button type="submit" className="btn btn-sm btn-aqua-cta px-3">
+              <button type="submit" className="btn btn-primary btn-sm px-4">
                 Guardar Cambios
               </button>
             </div>

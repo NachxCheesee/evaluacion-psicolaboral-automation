@@ -1,186 +1,246 @@
-import { useState } from "react";
-import { FAMILIAS_CARGO } from "../../data/mockData";
+import React, { useState, useEffect } from 'react';
+import { FAMILIAS_CARGO } from '../../data/mockData';
 
-export default function ModalEditarCandidato({ solicitud, onGuardar, onCerrar }) {
-  const [rut, setRut] = useState("");
-  const [candidato, setCandidato] = useState("");
-  const [correo, setCorreo] = useState("");
-  const [telefono, setTelefono] = useState("");
-  const [direccion, setDireccion] = useState("");
-  const [cargo, setCargo] = useState("");
-  const [familiaCargo, setFamiliaCargo] = useState(FAMILIAS_CARGO[0]);
-  const [observaciones, setObservaciones] = useState("");
-  const [cvActual, setCvActual] = useState("");
-  const [nuevoCV, setNuevoCV] = useState(null);
+export default function ModalEditarCandidato({ solicitud, onClose, onCerrar, onGuardarEdicion, onGuardar }) {
+  const cerrarModal = onClose || onCerrar || (() => {});
+  const guardar = onGuardarEdicion || onGuardar || (() => {});
 
-  // Sincroniza el formulario cuando cambia la solicitud (patrón de React)
-  const [solicitudPrevia, setSolicitudPrevia] = useState(null);
-  if (solicitud !== solicitudPrevia) {
-    setSolicitudPrevia(solicitud);
-    if (solicitud) {
-      setRut(solicitud.rut || "");
-      setCandidato(solicitud.candidato || "");
-      setCorreo(solicitud.correo || "");
-      setTelefono(solicitud.telefono || "");
-      setDireccion(solicitud.direccion || "");
-      setCargo(solicitud.cargo || "");
-      setFamiliaCargo(solicitud.familiaCargo || FAMILIAS_CARGO[0]);
-      setObservaciones(solicitud.observaciones || "");
-      setCvActual(solicitud.cvAdjunto || "Sin archivo adjunto");
-      setNuevoCV(null);
-    }
-  }
+  const [formData, setFormData] = useState({
+    candidato: solicitud?.candidato || '',
+    rut: solicitud?.rut || '',
+    cargo: solicitud?.cargo || '',
+    origen: solicitud?.origen || 'Externo',
+    contacto: solicitud?.contacto || '',
+    email: solicitud?.email || '',
+    direccion: solicitud?.direccion || '',
+    observaciones: solicitud?.observaciones || '',
+    cvArchivo: solicitud?.cvArchivo || null
+  });
+
+  const [nuevoCvNombre, setNuevoCvNombre] = useState('');
+
+  // Salir con tecla Escape
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') cerrarModal();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [cerrarModal]);
 
   if (!solicitud) return null;
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setNuevoCvNombre(file.name);
+      setFormData((prev) => ({ ...prev, cvArchivo: file.name }));
+    }
+  };
+
+  const handleDescargarActual = () => {
+    alert(`Descargando CV registrado: ${formData.cvArchivo}`);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    onGuardar({
+    guardar({
       ...solicitud,
-      rut: rut.trim(),
-      candidato: candidato.trim(),
-      correo: correo.trim(),
-      telefono: telefono.trim(),
-      direccion: direccion.trim(),
-      cargo: cargo.trim(),
-      familiaCargo,
-      cvAdjunto: nuevoCV ? nuevoCV.name : cvActual,
-      observaciones: observaciones.trim()
+      ...formData
     });
   };
 
   return (
-    <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(30,45,56,0.5)" }}>
-      <div className="modal-dialog modal-dialog-centered">
-        <div className="modal-content card-aquachile border-0 shadow-lg">
-          <div className="modal-header border-bottom py-3">
-            <h5 className="modal-title fs-6 fw-bold" style={{ color: "var(--aqua-text-dark)" }}>
-              Editar Antecedentes del Candidato
+    <div
+      className="modal show d-block"
+      tabIndex="-1"
+      role="dialog"
+      style={{ backgroundColor: 'rgba(0, 0, 0, 0.65)', zIndex: 1055 }}
+      onClick={cerrarModal}
+    >
+      <div
+        className="modal-dialog modal-lg modal-dialog-centered"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="modal-content border-0 shadow-lg rounded-3">
+          <div className="modal-header bg-light py-3">
+            <h5 className="modal-title fw-bold text-dark mb-0">
+              <i className="bi bi-pencil-square text-primary me-2"></i>
+              Editar Antecedentes del Postulante
             </h5>
-            <button type="button" className="btn-close" onClick={onCerrar}></button>
+            <button
+              type="button"
+              className="btn-close"
+              aria-label="Cerrar"
+              onClick={cerrarModal}
+            ></button>
           </div>
 
           <form onSubmit={handleSubmit}>
-            <div className="modal-body py-3">
-              <div className="row g-2 mb-3">
-                <div className="col-12 col-md-5">
-                  <label className="form-label small fw-semibold text-muted">RUT *</label>
+            <div className="modal-body p-4">
+              <div className="row g-3">
+                {/* Nombre */}
+                <div className="col-md-6">
+                  <label className="form-label small fw-semibold">Nombre y Apellidos *</label>
                   <input
                     type="text"
-                    className="form-control"
+                    name="candidato"
+                    className="form-control form-control-sm"
+                    value={formData.candidato}
+                    onChange={handleChange}
                     required
-                    value={rut}
-                    onChange={(e) => setRut(e.target.value)}
                   />
                 </div>
-                <div className="col-12 col-md-7">
-                  <label className="form-label small fw-semibold text-muted">Nombre del Candidato *</label>
+
+                {/* RUT */}
+                <div className="col-md-6">
+                  <label className="form-label small fw-semibold">RUT *</label>
                   <input
                     type="text"
-                    className="form-control"
+                    name="rut"
+                    className="form-control form-control-sm"
+                    value={formData.rut}
+                    onChange={handleChange}
                     required
-                    value={candidato}
-                    onChange={(e) => setCandidato(e.target.value)}
                   />
                 </div>
-              </div>
 
-              <div className="row g-2 mb-3">
-                <div className="col-12 col-md-6">
-                  <label className="form-label small fw-semibold text-muted">Correo Electrónico *</label>
-                  <input
-                    type="email"
-                    className="form-control"
-                    required
-                    value={correo}
-                    onChange={(e) => setCorreo(e.target.value)}
-                  />
-                </div>
-                <div className="col-12 col-md-6">
-                  <label className="form-label small fw-semibold text-muted">Teléfono</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={telefono}
-                    onChange={(e) => setTelefono(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="mb-3">
-                <label className="form-label small fw-semibold text-muted">Dirección de Residencia</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={direccion}
-                  onChange={(e) => setDireccion(e.target.value)}
-                />
-              </div>
-
-              <div className="row g-2 mb-3">
-                <div className="col-12 col-md-6">
-                  <label className="form-label small fw-semibold text-muted">Familia de Cargo *</label>
+                {/* Cargo */}
+                <div className="col-md-6">
+                  <label className="form-label small fw-semibold">Cargo de Postulación *</label>
                   <select
-                    className="form-select"
-                    value={familiaCargo}
-                    onChange={(e) => setFamiliaCargo(e.target.value)}
+                    name="cargo"
+                    className="form-select form-select-sm"
+                    value={formData.cargo}
+                    onChange={handleChange}
+                    required
                   >
-                    {FAMILIAS_CARGO.map((fam) => (
-                      <option key={fam} value={fam}>{fam}</option>
+                    {FAMILIAS_CARGO.map((cargo, idx) => (
+                      <option key={idx} value={cargo}>{cargo}</option>
                     ))}
+                    <option value="Otro Cargo Operativo">Otro Cargo Operativo</option>
                   </select>
                 </div>
-                <div className="col-12 col-md-6">
-                  <label className="form-label small fw-semibold text-muted">Nombre del Cargo *</label>
+
+                {/* Origen */}
+                <div className="col-md-6">
+                  <label className="form-label small fw-semibold">Origen de la Convocatoria</label>
+                  <select
+                    name="origen"
+                    className="form-select form-select-sm"
+                    value={formData.origen}
+                    onChange={handleChange}
+                  >
+                    <option value="Externo">Externo (Postulación Web / Mercado Laboral)</option>
+                    <option value="Interno">Interno (Concurso Interno / Traslado)</option>
+                  </select>
+                </div>
+
+                {/* Teléfono */}
+                <div className="col-md-6">
+                  <label className="form-label small fw-semibold">Teléfono Móvil</label>
                   <input
                     type="text"
-                    className="form-control"
-                    required
-                    value={cargo}
-                    onChange={(e) => setCargo(e.target.value)}
+                    name="contacto"
+                    className="form-control form-control-sm"
+                    value={formData.contacto}
+                    onChange={handleChange}
                   />
                 </div>
-              </div>
 
-              <div className="mb-3">
-                <label className="form-label small fw-semibold text-muted">Documento CV Adjunto</label>
-                <div className="small text-muted mb-2">
-                  Actual: <span className="fw-semibold text-dark">{cvActual}</span>
+                {/* Email */}
+                <div className="col-md-6">
+                  <label className="form-label small fw-semibold">Correo Electrónico</label>
+                  <input
+                    type="email"
+                    name="email"
+                    className="form-control form-control-sm"
+                    value={formData.email}
+                    onChange={handleChange}
+                  />
                 </div>
-                <input
-                  type="file"
-                  className="form-control form-control-sm"
-                  accept=".pdf,.doc,.docx"
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      setNuevoCV(e.target.files[0]);
-                    }
-                  }}
-                />
-                {nuevoCV && (
-                  <small className="text-success d-block mt-1" style={{ fontSize: "0.78rem" }}>
-                    Reemplazar por: <strong>{nuevoCV.name}</strong>
-                  </small>
-                )}
-              </div>
 
-              <div className="mb-2">
-                <label className="form-label small fw-semibold text-muted">Observaciones Generales</label>
-                <textarea
-                  className="form-control"
-                  rows="2"
-                  value={observaciones}
-                  onChange={(e) => setObservaciones(e.target.value)}
-                ></textarea>
+                {/* Residencia */}
+                <div className="col-12">
+                  <label className="form-label small fw-semibold">Ciudad / Comuna de Residencia</label>
+                  <input
+                    type="text"
+                    name="direccion"
+                    className="form-control form-control-sm"
+                    value={formData.direccion}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                {/* SECCIÓN DOCUMENTACIÓN / CV */}
+                <div className="col-12">
+                  <div className="p-3 bg-light rounded-3 border">
+                    <label className="form-label small fw-semibold text-dark d-flex align-items-center gap-2 mb-2">
+                      <i className="bi bi-file-earmark-pdf text-danger fs-5"></i>
+                      <span>Currículum Vitae (CV)</span>
+                    </label>
+
+                    {formData.cvArchivo ? (
+                      <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2 p-2 bg-white rounded border">
+                        <div className="small">
+                          <span className="text-muted">Archivo actual: </span>
+                          <strong className="text-primary">{formData.cvArchivo}</strong>
+                          {nuevoCvNombre && <span className="badge bg-warning text-dark ms-2">Por reemplazar</span>}
+                        </div>
+                        <button
+                          type="button"
+                          className="btn btn-outline-secondary btn-sm"
+                          onClick={handleDescargarActual}
+                        >
+                          <i className="bi bi-download me-1"></i>
+                          Descargar CV
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="small text-muted mb-2">El candidato aún no tiene un archivo adjunto.</div>
+                    )}
+
+                    <label className="form-label small text-muted mb-1">
+                      {formData.cvArchivo ? 'Reemplazar documento por uno nuevo:' : 'Subir documento:'}
+                    </label>
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      className="form-control form-control-sm"
+                      onChange={handleFileChange}
+                    />
+                  </div>
+                </div>
+
+                {/* Observaciones */}
+                <div className="col-12">
+                  <label className="form-label small fw-semibold">Observaciones / Experiencia Previa</label>
+                  <textarea
+                    name="observaciones"
+                    rows="3"
+                    className="form-control form-control-sm"
+                    value={formData.observaciones}
+                    onChange={handleChange}
+                  ></textarea>
+                </div>
               </div>
             </div>
 
-            <div className="modal-footer border-top py-2">
-              <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onCerrar}>
+            <div className="modal-footer bg-light py-2">
+              <button
+                type="button"
+                className="btn btn-outline-secondary btn-sm px-3"
+                onClick={cerrarModal}
+              >
                 Cancelar
               </button>
-              <button type="submit" className="btn btn-sm btn-aqua-cta px-3">
-                Guardar Cambios
+              <button type="submit" className="btn btn-primary btn-sm px-4">
+                Guardar Modificaciones
               </button>
             </div>
           </form>
