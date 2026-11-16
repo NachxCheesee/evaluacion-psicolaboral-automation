@@ -1,56 +1,80 @@
-import { cliente, resolver } from "./conexion";
+import { cliente, resolver, llamarRpc } from "./conexion";
 
-const CAMPOS = "id, correo, password, nombre, rol, titulo_rol, fecha_alta";
+const CAMPOS = [
+  "id",
+  "nombre",
+  "correo",
+  "rol",
+  "titulo_rol",
+  "fecha_alta",
+  "rol_nombre",
+  "estado_nombre",
+  "ultimo_acceso",
+  "permisos"
+].join(", ");
 
-// Fila (snake_case) -> objeto de la UI (camelCase)
+// Fila de vw_usuarios_publicos o resultado de login_usuario -> usuario UI
 export function mapearCuenta(fila) {
   if (!fila) return null;
+
   return {
     id: fila.id,
-    correo: fila.correo,
-    password: fila.password,
     nombre: fila.nombre,
+    correo: fila.correo,
     rol: fila.rol,
     tituloRol: fila.titulo_rol,
-    fechaAlta: fila.fecha_alta
+    rolNombre: fila.rol_nombre,
+    estado: fila.estado_nombre || fila.estado || "Activo",
+    fechaAlta: fila.fecha_alta,
+    ultimoAcceso: fila.ultimo_acceso,
+    permisos: fila.permisos || []
   };
-}
-
-// Objeto de la UI (camelCase) -> fila (snake_case); el id lo asigna la BD.
-// fecha_alta se omite si no viene, para que Postgres use su default.
-function aFila(cuenta) {
-  const fila = {
-    correo: cuenta.correo,
-    password: cuenta.password,
-    nombre: cuenta.nombre,
-    rol: cuenta.rol,
-    titulo_rol: cuenta.tituloRol ?? null
-  };
-  if (cuenta.fechaAlta) fila.fecha_alta = cuenta.fechaAlta;
-  return fila;
 }
 
 export async function listarCuentas() {
   const filas = await resolver(
-    cliente().from("cuentas").select(CAMPOS).order("id", { ascending: true })
+    cliente()
+      .from("vw_usuarios_publicos")
+      .select(CAMPOS)
+      .order("nombre", { ascending: true })
   );
   return (filas || []).map(mapearCuenta);
 }
 
-export async function crearCuenta(cuenta) {
-  const fila = await resolver(
-    cliente().from("cuentas").insert(aFila(cuenta)).select(CAMPOS).single()
-  );
+export async function loginUsuario(correo, password) {
+  const data = await llamarRpc("login_usuario", {
+    p_correo: correo,
+    p_password: password
+  });
+
+  const fila = Array.isArray(data) ? data[0] : data;
   return mapearCuenta(fila);
 }
 
-export async function actualizarCuenta(cuenta) {
-  const fila = await resolver(
-    cliente().from("cuentas").update(aFila(cuenta)).eq("id", cuenta.id).select(CAMPOS).single()
-  );
-  return mapearCuenta(fila);
+export async function crearCuenta(cuenta, usuarioId) {
+  return llamarRpc("crear_usuario", {
+    p_nombre: cuenta.nombre,
+    p_correo: cuenta.correo,
+    p_rol: cuenta.rol,
+    p_password: cuenta.password,
+    p_usuario_id: usuarioId
+  });
 }
 
-export async function eliminarCuenta(id) {
-  await resolver(cliente().from("cuentas").delete().eq("id", id));
+export async function actualizarCuenta(cuenta, usuarioId) {
+  return llamarRpc("actualizar_usuario", {
+    p_id: cuenta.id,
+    p_nombre: cuenta.nombre,
+    p_correo: cuenta.correo,
+    p_rol: cuenta.rol,
+    p_password: cuenta.nuevaPassword || null,
+    p_usuario_id: usuarioId
+  });
+}
+
+export async function eliminarCuenta(id, usuarioId) {
+  return llamarRpc("eliminar_usuario", {
+    p_id: id,
+    p_usuario_id: usuarioId
+  });
 }

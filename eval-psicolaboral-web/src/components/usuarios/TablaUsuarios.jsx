@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 export default function TablaUsuarios({
   usuarios = [],
@@ -11,6 +11,8 @@ export default function TablaUsuarios({
   
   // Estado para controlar qué usuario se está por eliminar con el Modal
   const [usuarioAEliminar, setUsuarioAEliminar] = useState(null);
+  const [eliminando, setEliminando] = useState(false);
+  const [errorEliminar, setErrorEliminar] = useState('');
 
   // Filtrado seguro sobre el arreglo de usuarios
   const usuariosFiltrados = (usuarios || []).filter((user) => {
@@ -38,10 +40,19 @@ export default function TablaUsuarios({
     }
   };
 
-  const confirmarEliminacion = () => {
-    if (usuarioAEliminar) {
-      onEliminarUsuario(usuarioAEliminar.id);
+  const confirmarEliminacion = async () => {
+    if (!usuarioAEliminar) return;
+
+    setEliminando(true);
+    setErrorEliminar('');
+
+    try {
+      await onEliminarUsuario(usuarioAEliminar.id);
       setUsuarioAEliminar(null);
+    } catch (err) {
+      setErrorEliminar(err.message || 'No fue posible eliminar el usuario.');
+    } finally {
+      setEliminando(false);
     }
   };
 
@@ -127,7 +138,10 @@ export default function TablaUsuarios({
                             type="button"
                             className="btn btn-outline-danger"
                             disabled={esUsuarioEnSesion}
-                            onClick={() => setUsuarioAEliminar(u)}
+                            onClick={() => {
+                              setErrorEliminar('');
+                              setUsuarioAEliminar(u);
+                            }}
                             title={esUsuarioEnSesion ? 'No puedes eliminar tu propia cuenta en sesión' : 'Eliminar Cuenta'}
                           >
                             Borrar
@@ -171,6 +185,10 @@ export default function TablaUsuarios({
               </div>
 
               <div className="modal-body p-4">
+                {errorEliminar && (
+                  <div className="alert alert-danger py-2 small">{errorEliminar}</div>
+                )}
+
                 <p className="mb-2 text-dark">
                   ¿Estás seguro de que deseas revocar el acceso y eliminar permanentemente a este usuario?
                 </p>
@@ -191,6 +209,7 @@ export default function TablaUsuarios({
                   type="button"
                   className="btn btn-outline-secondary btn-sm px-3"
                   onClick={() => setUsuarioAEliminar(null)}
+                  disabled={eliminando}
                 >
                   Cancelar
                 </button>
@@ -198,9 +217,10 @@ export default function TablaUsuarios({
                   type="button"
                   className="btn btn-danger btn-sm px-3 fw-semibold d-flex align-items-center gap-1"
                   onClick={confirmarEliminacion}
+                  disabled={eliminando}
                 >
                   <i className="bi bi-trash3"></i>
-                  <span>Eliminar Cuenta</span>
+                  <span>{eliminando ? 'Eliminando...' : 'Eliminar Cuenta'}</span>
                 </button>
               </div>
             </div>

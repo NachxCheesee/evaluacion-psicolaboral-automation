@@ -1,9 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { FAMILIAS_CARGO } from '../../data/mockData';
 
-export default function ModalEditarCandidato({ solicitud, onClose, onCerrar, onGuardarEdicion, onGuardar }) {
+export default function ModalEditarCandidato({
+  solicitud,
+  cargos = FAMILIAS_CARGO,
+  onClose,
+  onCerrar,
+  onGuardarEdicion,
+  onGuardar
+}) {
   const cerrarModal = onClose || onCerrar || (() => {});
   const guardar = onGuardarEdicion || onGuardar || (() => {});
+  const opcionesCargo = cargos?.length ? cargos : FAMILIAS_CARGO;
 
   const [formData, setFormData] = useState({
     candidato: solicitud?.candidato || '',
@@ -18,6 +26,8 @@ export default function ModalEditarCandidato({ solicitud, onClose, onCerrar, onG
   });
 
   const [nuevoCvNombre, setNuevoCvNombre] = useState('');
+  const [error, setError] = useState('');
+  const [guardando, setGuardando] = useState(false);
 
   // Salir con tecla Escape
   useEffect(() => {
@@ -47,12 +57,21 @@ export default function ModalEditarCandidato({ solicitud, onClose, onCerrar, onG
     alert(`Descargando CV registrado: ${formData.cvArchivo}`);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    guardar({
-      ...solicitud,
-      ...formData
-    });
+    setError('');
+    setGuardando(true);
+
+    try {
+      await guardar({
+        ...solicitud,
+        ...formData
+      });
+    } catch (err) {
+      setError(err.message || 'No fue posible guardar los cambios.');
+    } finally {
+      setGuardando(false);
+    }
   };
 
   return (
@@ -83,6 +102,8 @@ export default function ModalEditarCandidato({ solicitud, onClose, onCerrar, onG
 
           <form onSubmit={handleSubmit}>
             <div className="modal-body p-4">
+              {error && <div className="alert alert-danger py-2 small">{error}</div>}
+
               <div className="row g-3">
                 {/* Nombre */}
                 <div className="col-md-6">
@@ -120,10 +141,12 @@ export default function ModalEditarCandidato({ solicitud, onClose, onCerrar, onG
                     onChange={handleChange}
                     required
                   >
-                    {FAMILIAS_CARGO.map((cargo, idx) => (
-                      <option key={idx} value={cargo}>{cargo}</option>
+                    {opcionesCargo.map((cargo, idx) => (
+                      <option key={`${cargo}-${idx}`} value={cargo}>{cargo}</option>
                     ))}
-                    <option value="Otro Cargo Operativo">Otro Cargo Operativo</option>
+                    {!opcionesCargo.includes('Otro Cargo Operativo') && (
+                      <option value="Otro Cargo Operativo">Otro Cargo Operativo</option>
+                    )}
                   </select>
                 </div>
 
@@ -239,8 +262,8 @@ export default function ModalEditarCandidato({ solicitud, onClose, onCerrar, onG
               >
                 Cancelar
               </button>
-              <button type="submit" className="btn btn-primary btn-sm px-4">
-                Guardar Modificaciones
+              <button type="submit" className="btn btn-primary btn-sm px-4" disabled={guardando}>
+                {guardando ? 'Guardando...' : 'Guardar Modificaciones'}
               </button>
             </div>
           </form>

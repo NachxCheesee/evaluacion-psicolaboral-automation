@@ -29,7 +29,7 @@ const validarRutChileno = (rutCompleto) => {
 
   const resto = suma % 11;
   const dvEsperado = 11 - resto;
-  let dvCalculado = '0';
+  let dvCalculado;
 
   if (dvEsperado === 11) dvCalculado = '0';
   else if (dvEsperado === 10) dvCalculado = 'K';

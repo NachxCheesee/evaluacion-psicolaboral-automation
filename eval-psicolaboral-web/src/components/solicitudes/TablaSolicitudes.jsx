@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 // Quita tildes y pasa a minúsculas para búsquedas flexibles
 const normalizarTexto = (texto) => {
@@ -233,8 +233,8 @@ export default function TablaSolicitudes({
                           </button>
                         )}
 
-                        {/* Borrar (ADMIN y ANALISTA) */}
-                        {(rol === 'ADMIN' || rol === 'ANALISTA') && (
+                        {/* Borrar (solo ADMIN) */}
+                        {rol === 'ADMIN' && (
                           <button
                             type="button"
                             className="btn btn-outline-danger"

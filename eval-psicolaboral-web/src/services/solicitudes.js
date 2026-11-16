@@ -1,8 +1,28 @@
-import { cliente, resolver } from "./conexion";
+import { cliente, resolver, llamarRpc } from "./conexion";
 
-const CAMPOS =
-  "id, rut, candidato, correo, telefono, direccion, cargo, familia_cargo, " +
-  "fecha_solicitud, solicitado_por, responsable, cv_adjunto, estado, observaciones, evaluacion";
+const CAMPOS = [
+  "id",
+  "codigo",
+  "rut",
+  "candidato",
+  "cargo",
+  "familia_cargo",
+  "emisor",
+  "origen",
+  "estado",
+  "fecha",
+  "contacto",
+  "email",
+  "direccion",
+  "observaciones",
+  "cv_adjunto",
+  "entrevista_archivo",
+  "informe_archivo",
+  "resultado",
+  "fecha_entrevista",
+  "observaciones_evaluador",
+  "evaluacion"
+].join(", ");
 
 const EVALUACION_VACIA = {
   fechaEntrevista: "",
@@ -12,92 +32,114 @@ const EVALUACION_VACIA = {
   archivoInformeFinal: ""
 };
 
-// Fila (snake_case) -> objeto de la UI (camelCase)
+// Fila de vw_solicitudes_completas -> objeto de la UI
 export function mapearSolicitud(fila) {
   if (!fila) return null;
+
   return {
     id: fila.id,
+    codigo: fila.codigo,
     rut: fila.rut,
     candidato: fila.candidato,
-    correo: fila.correo,
-    telefono: fila.telefono,
-    direccion: fila.direccion,
     cargo: fila.cargo,
     familiaCargo: fila.familia_cargo,
-    fechaSolicitud: fila.fecha_solicitud,
-    solicitadoPor: fila.solicitado_por,
-    responsable: fila.responsable,
-    cvAdjunto: fila.cv_adjunto,
+    emisor: fila.emisor,
+    origen: fila.origen,
     estado: fila.estado,
+    fecha: fila.fecha,
+    contacto: fila.contacto,
+    email: fila.email,
+    direccion: fila.direccion,
     observaciones: fila.observaciones,
+    cvArchivo: fila.cv_adjunto,
+    entrevistaArchivo: fila.entrevista_archivo,
+    informeArchivo: fila.informe_archivo,
+    resultado: fila.resultado,
+    fechaEntrevista: fila.fecha_entrevista,
+    observacionesEvaluador: fila.observaciones_evaluador,
     evaluacion: { ...EVALUACION_VACIA, ...(fila.evaluacion || {}) }
   };
 }
 
-// Objeto de la UI (camelCase) -> fila (snake_case); el id lo asigna la BD.
-// Los campos con valor por defecto en la BD se omiten si no vienen,
-// para que Postgres aplique el default en vez de recibir un null.
-function aFila(solicitud) {
-  const fila = {
-    rut: solicitud.rut ?? null,
+function payloadPostulacion(solicitud) {
+  return {
+    rut: solicitud.rut,
     candidato: solicitud.candidato,
-    correo: solicitud.correo ?? null,
-    telefono: solicitud.telefono ?? null,
-    direccion: solicitud.direccion ?? null,
     cargo: solicitud.cargo,
-    familia_cargo: solicitud.familiaCargo ?? null,
-    solicitado_por: solicitud.solicitadoPor ?? null,
-    responsable: solicitud.responsable ?? null,
-    cv_adjunto: solicitud.cvAdjunto ?? null,
-    estado: solicitud.estado ?? "Pendiente",
-    observaciones: solicitud.observaciones ?? null
+    familiaCargo: solicitud.familiaCargo ?? null,
+    email: solicitud.email ?? null,
+    contacto: solicitud.contacto ?? null,
+    direccion: solicitud.direccion ?? null,
+    observaciones: solicitud.observaciones ?? null,
+    cvArchivo: solicitud.cvArchivo ?? null,
+    origen: solicitud.origen ?? "Externo",
+    fecha: solicitud.fecha ?? solicitud.fechaSolicitud ?? null
   };
-  if (solicitud.fechaSolicitud) fila.fecha_solicitud = solicitud.fechaSolicitud;
-  if (solicitud.evaluacion) fila.evaluacion = solicitud.evaluacion;
-  return fila;
+}
+
+function payloadActualizacion(solicitud) {
+  const payload = {
+    id: solicitud.id,
+    rut: solicitud.rut,
+    candidato: solicitud.candidato,
+    cargo: solicitud.cargo,
+    familiaCargo: solicitud.familiaCargo ?? null,
+    email: solicitud.email ?? null,
+    contacto: solicitud.contacto ?? null,
+    direccion: solicitud.direccion ?? null,
+    observaciones: solicitud.observaciones ?? null,
+    origen: solicitud.origen ?? "Externo"
+  };
+
+  if (Object.prototype.hasOwnProperty.call(solicitud, "cvArchivo")) {
+    payload.cvArchivo = solicitud.cvArchivo ?? "";
+  }
+
+  return payload;
 }
 
 export async function listarSolicitudes() {
   const filas = await resolver(
-    cliente().from("solicitudes").select(CAMPOS).order("id", { ascending: true })
+    cliente()
+      .from("vw_solicitudes_completas")
+      .select(CAMPOS)
+      .order("fecha", { ascending: false })
+      .order("id", { ascending: false })
   );
   return (filas || []).map(mapearSolicitud);
 }
 
-export async function crearSolicitud(solicitud) {
-  const fila = await resolver(
-    cliente().from("solicitudes").insert(aFila(solicitud)).select(CAMPOS).single()
-  );
-  return mapearSolicitud(fila);
+export async function crearSolicitud(solicitud, usuarioId = null) {
+  return llamarRpc("crear_postulacion", {
+    p_payload: payloadPostulacion(solicitud),
+    p_usuario_id: usuarioId
+  });
 }
 
-export async function actualizarSolicitud(solicitud) {
-  const fila = await resolver(
-    cliente()
-      .from("solicitudes")
-      .update(aFila(solicitud))
-      .eq("id", solicitud.id)
-      .select(CAMPOS)
-      .single()
-  );
-  return mapearSolicitud(fila);
+export async function actualizarSolicitud(solicitud, usuarioId = null) {
+  return llamarRpc("actualizar_postulacion", {
+    p_payload: payloadActualizacion(solicitud),
+    p_usuario_id: usuarioId
+  });
 }
 
-export async function actualizarEvaluacion(id, datosEvaluacion) {
-  const fila = await resolver(
-    cliente()
-      .from("solicitudes")
-      .update({
-        estado: datosEvaluacion.estado,
-        evaluacion: datosEvaluacion.evaluacion
-      })
-      .eq("id", id)
-      .select(CAMPOS)
-      .single()
-  );
-  return mapearSolicitud(fila);
+export async function guardarEvaluacion(solicitud, usuarioId) {
+  return llamarRpc("guardar_evaluacion", {
+    p_solicitud_id: solicitud.id,
+    p_usuario_id: usuarioId,
+    p_fecha_entrevista: solicitud.fechaEntrevista || null,
+    p_resultado: solicitud.resultado || null,
+    p_observaciones: solicitud.observacionesEvaluador || null,
+    p_estado: solicitud.estado || null,
+    p_entrevista_archivo: solicitud.entrevistaArchivo ?? "",
+    p_informe_archivo: solicitud.informeArchivo ?? "",
+    p_cv_archivo: solicitud.cvArchivo ?? ""
+  });
 }
 
-export async function eliminarSolicitud(id) {
-  await resolver(cliente().from("solicitudes").delete().eq("id", id));
+export async function eliminarSolicitud(id, usuarioId) {
+  return llamarRpc("eliminar_solicitud", {
+    p_id: id,
+    p_usuario_id: usuarioId
+  });
 }

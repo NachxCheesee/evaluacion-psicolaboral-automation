@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 
 export default function ModalVerDetalle({ solicitud, onClose, onCerrar }) {
   const cerrarModal = onClose || onCerrar || (() => {});

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function ModalEditarUsuario({ usuario, onClose, onCerrar, onGuardarEdicion }) {
   const cerrarModal = onClose || onCerrar || (() => {});
@@ -11,6 +11,7 @@ export default function ModalEditarUsuario({ usuario, onClose, onCerrar, onGuard
     confirmarPassword: ''
   });
   const [error, setError] = useState('');
+  const [guardando, setGuardando] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -28,7 +29,7 @@ export default function ModalEditarUsuario({ usuario, onClose, onCerrar, onGuard
     if (error) setError('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -40,13 +41,21 @@ export default function ModalEditarUsuario({ usuario, onClose, onCerrar, onGuard
       }
     }
 
-    onGuardarEdicion({
-      ...usuario,
-      nombre: formData.nombre.trim(),
-      correo: formData.correo.trim().toLowerCase(),
-      rol: formData.rol,
-      password: formData.nuevaPassword.trim() ? formData.nuevaPassword : usuario.password
-    });
+    setGuardando(true);
+
+    try {
+      await onGuardarEdicion({
+        ...usuario,
+        nombre: formData.nombre.trim(),
+        correo: formData.correo.trim().toLowerCase(),
+        rol: formData.rol,
+        nuevaPassword: formData.nuevaPassword.trim() || null
+      });
+    } catch (err) {
+      setError(err.message || 'No fue posible actualizar el usuario.');
+    } finally {
+      setGuardando(false);
+    }
   };
 
   return (
@@ -174,8 +183,8 @@ export default function ModalEditarUsuario({ usuario, onClose, onCerrar, onGuard
               >
                 Cancelar
               </button>
-              <button type="submit" className="btn btn-primary btn-sm px-4">
-                Guardar Cambios
+              <button type="submit" className="btn btn-primary btn-sm px-4" disabled={guardando}>
+                {guardando ? 'Guardando...' : 'Guardar Cambios'}
               </button>
             </div>
           </form>

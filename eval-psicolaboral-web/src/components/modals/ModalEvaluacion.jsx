@@ -1,18 +1,34 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
-export default function ModalEvaluacion({ solicitud, onClose, onCerrar, onGuardarEvaluacion, onGuardar }) {
+export default function ModalEvaluacion({
+  solicitud,
+  resultados = [],
+  onClose,
+  onCerrar,
+  onGuardarEvaluacion,
+  onGuardar
+}) {
   const cerrarModal = onClose || onCerrar || (() => {});
   const guardar = onGuardarEvaluacion || onGuardar || (() => {});
+  const opcionesResultado = resultados?.length
+    ? resultados
+    : [
+        { nombre: 'Recomendable' },
+        { nombre: 'Recomendable con Observaciones' },
+        { nombre: 'No Recomendable' }
+      ];
 
   const [fechaEntrevista, setFechaEntrevista] = useState(solicitud?.fechaEntrevista || '');
   const [observacionesEvaluador, setObservacionesEvaluador] = useState(solicitud?.observacionesEvaluador || '');
   const [resultado, setResultado] = useState(solicitud?.resultado || '');
-  const [estado, setEstado] = useState(solicitud?.estado || 'En proceso');
+  const estado = solicitud?.estado || 'En proceso';
+  const [error, setError] = useState('');
+  const [guardando, setGuardando] = useState(false);
 
   // Archivos del expediente
-  const [cvArchivo, setCvArchivo] = useState(solicitud?.cvArchivo || null);
-  const [entrevistaArchivo, setEntrevistaArchivo] = useState(solicitud?.entrevistaArchivo || null);
-  const [informeArchivo, setInformeArchivo] = useState(solicitud?.informeArchivo || null);
+  const [cvArchivo, setCvArchivo] = useState(solicitud?.cvArchivo || '');
+  const [entrevistaArchivo, setEntrevistaArchivo] = useState(solicitud?.entrevistaArchivo || '');
+  const [informeArchivo, setInformeArchivo] = useState(solicitud?.informeArchivo || '');
 
   // Control de menús desplegables (3 puntos)
   const [menuAbierto, setMenuAbierto] = useState(null); // 'cv' | 'pauta' | 'informe' | null
@@ -53,25 +69,33 @@ export default function ModalEvaluacion({ solicitud, onClose, onCerrar, onGuarda
     e.target.value = '';
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setGuardando(true);
 
     const nuevoEstado = resultado ? 'Finalizada' : (fechaEntrevista ? 'En proceso' : estado);
 
     // Asignación de nombres si dictaminó y no adjuntó archivo manual
-    const nombreInformeFinal = informeArchivo || (resultado ? `Informe_Psicolaboral_${solicitud.candidato.replace(/\s+/g, '_')}.pdf` : null);
-    const nombrePautaFinal = entrevistaArchivo || (fechaEntrevista ? `Pauta_Entrevista_${solicitud.candidato.replace(/\s+/g, '_')}.pdf` : null);
+    const nombreInformeFinal = informeArchivo || (resultado ? `Informe_Psicolaboral_${solicitud.candidato.replace(/\s+/g, '_')}.pdf` : '');
+    const nombrePautaFinal = entrevistaArchivo || (fechaEntrevista ? `Pauta_Entrevista_${solicitud.candidato.replace(/\s+/g, '_')}.pdf` : '');
 
-    guardar({
-      ...solicitud,
-      cvArchivo: cvArchivo || null,
-      fechaEntrevista: fechaEntrevista || null,
-      observacionesEvaluador: observacionesEvaluador.trim() || null,
-      resultado: resultado || null,
-      estado: nuevoEstado,
-      informeArchivo: nombreInformeFinal,
-      entrevistaArchivo: nombrePautaFinal
-    });
+    try {
+      await guardar({
+        ...solicitud,
+        cvArchivo,
+        fechaEntrevista: fechaEntrevista || null,
+        observacionesEvaluador: observacionesEvaluador.trim() || null,
+        resultado: resultado || null,
+        estado: nuevoEstado,
+        informeArchivo: nombreInformeFinal,
+        entrevistaArchivo: nombrePautaFinal
+      });
+    } catch (err) {
+      setError(err.message || 'No fue posible guardar la evaluación.');
+    } finally {
+      setGuardando(false);
+    }
   };
 
   return (
@@ -108,6 +132,8 @@ export default function ModalEvaluacion({ solicitud, onClose, onCerrar, onGuarda
 
           <form onSubmit={handleSubmit}>
             <div className="modal-body p-4">
+              {error && <div className="alert alert-danger py-2 small">{error}</div>}
+
               {/* 1. Resumen del Candidato */}
               <div className="d-flex justify-content-between align-items-center mb-3 p-3 bg-light rounded-3 border">
                 <div>
@@ -208,7 +234,7 @@ export default function ModalEvaluacion({ solicitud, onClose, onCerrar, onGuarda
                               type="button"
                               className="dropdown-item small py-1 text-danger"
                               onClick={() => {
-                                setCvArchivo(null);
+                                setCvArchivo("");
                                 setMenuAbierto(null);
                               }}
                             >
@@ -272,7 +298,7 @@ export default function ModalEvaluacion({ solicitud, onClose, onCerrar, onGuarda
                               type="button"
                               className="dropdown-item small py-1 text-danger"
                               onClick={() => {
-                                setEntrevistaArchivo(null);
+                                setEntrevistaArchivo("");
                                 setMenuAbierto(null);
                               }}
                             >
@@ -336,7 +362,7 @@ export default function ModalEvaluacion({ solicitud, onClose, onCerrar, onGuarda
                               type="button"
                               className="dropdown-item small py-1 text-danger"
                               onClick={() => {
-                                setInformeArchivo(null);
+                                setInformeArchivo("");
                                 setMenuAbierto(null);
                               }}
                             >
@@ -370,9 +396,11 @@ export default function ModalEvaluacion({ solicitud, onClose, onCerrar, onGuarda
                     onChange={(e) => setResultado(e.target.value)}
                   >
                     <option value="">-- Sin dictamen (En evaluación) --</option>
-                    <option value="Recomendable">Recomendable (Apto para faena / planta)</option>
-                    <option value="Recomendable con Observaciones">Recomendable con Observaciones</option>
-                    <option value="No Recomendable">No Recomendable para este cargo</option>
+                    {opcionesResultado.map((opcion) => (
+                      <option key={opcion.codigo || opcion.nombre} value={opcion.nombre}>
+                        {opcion.nombre}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -398,8 +426,8 @@ export default function ModalEvaluacion({ solicitud, onClose, onCerrar, onGuarda
               >
                 Cancelar
               </button>
-              <button type="submit" className="btn btn-primary btn-sm px-4">
-                Guardar Evaluación y Archivos
+              <button type="submit" className="btn btn-primary btn-sm px-4" disabled={guardando}>
+                {guardando ? 'Guardando...' : 'Guardar Evaluación y Archivos'}
               </button>
             </div>
           </form>

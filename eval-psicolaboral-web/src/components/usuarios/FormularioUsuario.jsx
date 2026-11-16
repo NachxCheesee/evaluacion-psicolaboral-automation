@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 export default function FormularioUsuario({ onCrearUsuario }) {
   const [formData, setFormData] = useState({
@@ -9,6 +9,7 @@ export default function FormularioUsuario({ onCrearUsuario }) {
     confirmarPassword: ''
   });
   const [error, setError] = useState('');
+  const [guardando, setGuardando] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -16,7 +17,7 @@ export default function FormularioUsuario({ onCrearUsuario }) {
     if (error) setError('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -36,22 +37,29 @@ export default function FormularioUsuario({ onCrearUsuario }) {
     }
 
     const nuevoUsuario = {
-      id: Date.now(),
       nombre: formData.nombre.trim(),
       correo: formData.correo.trim().toLowerCase(),
       rol: formData.rol,
       password: formData.password
     };
 
-    onCrearUsuario(nuevoUsuario);
+    setGuardando(true);
 
-    setFormData({
-      nombre: '',
-      correo: '',
-      rol: 'ANALISTA',
-      password: '',
-      confirmarPassword: ''
-    });
+    try {
+      await onCrearUsuario(nuevoUsuario);
+
+      setFormData({
+        nombre: '',
+        correo: '',
+        rol: 'ANALISTA',
+        password: '',
+        confirmarPassword: ''
+      });
+    } catch (err) {
+      setError(err.message || 'No fue posible crear el usuario.');
+    } finally {
+      setGuardando(false);
+    }
   };
 
   return (
@@ -149,8 +157,8 @@ export default function FormularioUsuario({ onCrearUsuario }) {
           </div>
 
           <div className="text-end mt-4 pt-2 border-top">
-            <button type="submit" className="btn btn-primary btn-sm px-4">
-              Guardar Usuario
+            <button type="submit" className="btn btn-primary btn-sm px-4" disabled={guardando}>
+              {guardando ? 'Guardando...' : 'Guardar Usuario'}
             </button>
           </div>
         </form>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 
 // Layout & Dashboard
@@ -28,15 +28,14 @@ export default function PanelPage({
   onEditarSolicitud,
   onEliminarSolicitud,
   onGuardarEvaluacion,
-  cuentas,
+  cuentas = [],
   onCrearUsuario,
   onEditarUsuario,
-  onEliminarUsuario
+  onEliminarUsuario,
+  cargos = [],
+  resultados = [],
+  modoDemo = false
 }) {
-  if (!usuarioActual) {
-    return <Navigate to="/login" replace />;
-  }
-
   const [tabActiva, setTabActiva] = useState('solicitudes');
   const [mostrarFormSolicitud, setMostrarFormSolicitud] = useState(false);
   const [mostrarFormUsuario, setMostrarFormUsuario] = useState(false);
@@ -48,11 +47,21 @@ export default function PanelPage({
   const [modalEliminar, setModalEliminar] = useState(null);
   const [modalEditarUser, setModalEditarUser] = useState(null);
 
+  if (!usuarioActual) {
+    return <Navigate to="/login" replace />;
+  }
+
   return (
     <div className="min-vh-100 bg-light d-flex flex-column">
       <Navbar usuarioActual={usuarioActual} onLogout={onLogout} />
 
       <main className="container my-4 flex-grow-1">
+        {modoDemo && (
+          <div className="alert alert-info py-2 small" role="alert">
+            Modo demostración: los cambios se mantienen solo en esta sesión del navegador.
+          </div>
+        )}
+
         {/* Cabecera del Panel */}
         <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4">
           <div>
@@ -101,8 +110,9 @@ export default function PanelPage({
             {mostrarFormSolicitud && (
               <FormularioSolicitud
                 usuarioActual={usuarioActual}
-                onCrearSolicitud={(nueva) => {
-                  onCrearSolicitud(nueva);
+                cargos={cargos}
+                onCrearSolicitud={async (nueva) => {
+                  await onCrearSolicitud(nueva);
                   setMostrarFormSolicitud(false);
                 }}
               />
@@ -134,8 +144,8 @@ export default function PanelPage({
 
             {mostrarFormUsuario && (
               <FormularioUsuario
-                onCrearUsuario={(nuevo) => {
-                  onCrearUsuario(nuevo);
+                onCrearUsuario={async (nuevo) => {
+                  await onCrearUsuario(nuevo);
                   setMostrarFormUsuario(false);
                 }}
               />
@@ -162,9 +172,10 @@ export default function PanelPage({
       {modalEditar && (
         <ModalEditarCandidato
           solicitud={modalEditar}
+          cargos={cargos}
           onClose={() => setModalEditar(null)}
-          onGuardarEdicion={(editada) => {
-            onEditarSolicitud(editada);
+          onGuardarEdicion={async (editada) => {
+            await onEditarSolicitud(editada);
             setModalEditar(null);
           }}
         />
@@ -173,9 +184,10 @@ export default function PanelPage({
       {modalEvaluar && (
         <ModalEvaluacion
           solicitud={modalEvaluar}
+          resultados={resultados}
           onClose={() => setModalEvaluar(null)}
-          onGuardarEvaluacion={(evaluada) => {
-            onGuardarEvaluacion(evaluada);
+          onGuardarEvaluacion={async (evaluada) => {
+            await onGuardarEvaluacion(evaluada);
             setModalEvaluar(null);
           }}
         />
@@ -185,8 +197,8 @@ export default function PanelPage({
         <ModalConfirmarEliminar
           solicitud={modalEliminar}
           onClose={() => setModalEliminar(null)}
-          onConfirmar={() => {
-            onEliminarSolicitud(modalEliminar.id);
+          onConfirmar={async () => {
+            await onEliminarSolicitud(modalEliminar.id);
             setModalEliminar(null);
           }}
         />
@@ -196,8 +208,8 @@ export default function PanelPage({
         <ModalEditarUsuario
           usuario={modalEditarUser}
           onClose={() => setModalEditarUser(null)}
-          onGuardarEdicion={(userEditado) => {
-            onEditarUsuario(userEditado);
+          onGuardarEdicion={async (userEditado) => {
+            await onEditarUsuario(userEditado);
             setModalEditarUser(null);
           }}
         />
