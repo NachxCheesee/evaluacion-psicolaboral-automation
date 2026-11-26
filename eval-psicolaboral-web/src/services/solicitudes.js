@@ -1,103 +1,86 @@
-import { cliente, resolver } from "./conexion";
+import { api } from "../lib/api";
 
-const CAMPOS =
-  "id, rut, candidato, correo, telefono, direccion, cargo, familia_cargo, " +
-  "fecha_solicitud, solicitado_por, responsable, cv_adjunto, estado, observaciones, evaluacion";
-
-const EVALUACION_VACIA = {
-  fechaEntrevista: "",
-  resultado: "",
-  observacionesEvaluador: "",
-  archivoTranscripcion: "",
-  archivoInformeFinal: ""
-};
-
-// Fila (snake_case) -> objeto de la UI (camelCase)
-export function mapearSolicitud(fila) {
-  if (!fila) return null;
+// Backend (camelCase + evaluacion anidada) -> forma que usa la UI
+function aSolicitud(s) {
+  const ev = s.evaluacion || {};
   return {
-    id: fila.id,
-    rut: fila.rut,
-    candidato: fila.candidato,
-    correo: fila.correo,
-    telefono: fila.telefono,
-    direccion: fila.direccion,
-    cargo: fila.cargo,
-    familiaCargo: fila.familia_cargo,
-    fechaSolicitud: fila.fecha_solicitud,
-    solicitadoPor: fila.solicitado_por,
-    responsable: fila.responsable,
-    cvAdjunto: fila.cv_adjunto,
-    estado: fila.estado,
-    observaciones: fila.observaciones,
-    evaluacion: { ...EVALUACION_VACIA, ...(fila.evaluacion || {}) }
+    id: s.id,
+    rut: s.rut ?? "",
+    candidato: s.candidato ?? "",
+    cargo: s.cargo ?? "",
+    emisor: s.solicitadoPor ?? "",
+    origen: "Externo",
+    estado: s.estado ?? "Pendiente",
+    fecha: s.fechaSolicitud ?? null,
+    contacto: s.telefono ?? "",
+    email: s.correo ?? "",
+    direccion: s.direccion ?? "",
+    observaciones: s.observaciones ?? "",
+    cvArchivo: s.cvAdjunto ?? null,
+    entrevistaArchivo: ev.archivoTranscripcion || null,
+    informeArchivo: ev.archivoInformeFinal || null,
+    resultado: ev.resultado || null,
+    fechaEntrevista: ev.fechaEntrevista || null,
+    observacionesEvaluador: ev.observacionesEvaluador || null
   };
 }
 
-// Objeto de la UI (camelCase) -> fila (snake_case); el id lo asigna la BD.
-// Los campos con valor por defecto en la BD se omiten si no vienen,
-// para que Postgres aplique el default en vez de recibir un null.
-function aFila(solicitud) {
-  const fila = {
-    rut: solicitud.rut ?? null,
-    candidato: solicitud.candidato,
-    correo: solicitud.correo ?? null,
-    telefono: solicitud.telefono ?? null,
-    direccion: solicitud.direccion ?? null,
-    cargo: solicitud.cargo,
-    familia_cargo: solicitud.familiaCargo ?? null,
-    solicitado_por: solicitud.solicitadoPor ?? null,
-    responsable: solicitud.responsable ?? null,
-    cv_adjunto: solicitud.cvAdjunto ?? null,
-    estado: solicitud.estado ?? "Pendiente",
-    observaciones: solicitud.observaciones ?? null
+// Forma UI -> backend request
+function aBackend(s) {
+  return {
+    rut: s.rut || null,
+    candidato: s.candidato,
+    correo: s.email || null,
+    telefono: s.contacto || null,
+    direccion: s.direccion || null,
+    cargo: s.cargo,
+    familiaCargo: s.familiaCargo || null,
+    fechaSolicitud: s.fecha || null,
+    solicitadoPor: s.emisor || null,
+    responsable: s.responsable || null,
+    cvAdjunto: s.cvArchivo || null,
+    estado: s.estado || null,
+    observaciones: s.observaciones || null,
+    evaluacion: {
+      fechaEntrevista: s.fechaEntrevista || "",
+      resultado: s.resultado || "",
+      observacionesEvaluador: s.observacionesEvaluador || "",
+      archivoTranscripcion: s.entrevistaArchivo || "",
+      archivoInformeFinal: s.informeArchivo || ""
+    }
   };
-  if (solicitud.fechaSolicitud) fila.fecha_solicitud = solicitud.fechaSolicitud;
-  if (solicitud.evaluacion) fila.evaluacion = solicitud.evaluacion;
-  return fila;
 }
 
 export async function listarSolicitudes() {
-  const filas = await resolver(
-    cliente().from("solicitudes").select(CAMPOS).order("id", { ascending: true })
-  );
-  return (filas || []).map(mapearSolicitud);
+  const data = await api.get("/api/solicitudes?size=100");
+  return (data.content || []).map(aSolicitud);
 }
 
 export async function crearSolicitud(solicitud) {
-  const fila = await resolver(
-    cliente().from("solicitudes").insert(aFila(solicitud)).select(CAMPOS).single()
-  );
-  return mapearSolicitud(fila);
+  const s = await api.post("/api/solicitudes", aBackend(solicitud));
+  return aSolicitud(s);
 }
 
 export async function actualizarSolicitud(solicitud) {
-  const fila = await resolver(
-    cliente()
-      .from("solicitudes")
-      .update(aFila(solicitud))
-      .eq("id", solicitud.id)
-      .select(CAMPOS)
-      .single()
-  );
-  return mapearSolicitud(fila);
+  const s = await api.put(`/api/solicitudes/${solicitud.id}`, aBackend(solicitud));
+  return aSolicitud(s);
 }
 
-export async function actualizarEvaluacion(id, datosEvaluacion) {
-  const fila = await resolver(
-    cliente()
-      .from("solicitudes")
-      .update({
-        estado: datosEvaluacion.estado,
-        evaluacion: datosEvaluacion.evaluacion
-      })
-      .eq("id", id)
-      .select(CAMPOS)
-      .single()
-  );
-  return mapearSolicitud(fila);
+export async function actualizarEvaluacion(id, solicitud) {
+  const body = {
+    estado: solicitud.estado,
+    evaluacion: {
+      fechaEntrevista: solicitud.fechaEntrevista || "",
+      resultado: solicitud.resultado || "",
+      observacionesEvaluador: solicitud.observacionesEvaluador || "",
+      archivoTranscripcion: solicitud.entrevistaArchivo || "",
+      archivoInformeFinal: solicitud.informeArchivo || ""
+    }
+  };
+  const s = await api.patch(`/api/solicitudes/${id}/evaluacion`, body);
+  return aSolicitud(s);
 }
 
 export async function eliminarSolicitud(id) {
-  await resolver(cliente().from("solicitudes").delete().eq("id", id));
+  await api.del(`/api/solicitudes/${id}`);
 }

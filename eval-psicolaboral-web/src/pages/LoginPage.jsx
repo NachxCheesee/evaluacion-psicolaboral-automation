@@ -1,25 +1,26 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { login } from '../lib/api';
 
-export default function LoginPage({ cuentas, onLogin }) {
+export default function LoginPage({ onLogin }) {
   const [correo, setCorreo] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [cargando, setCargando] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-
-    const usuarioEncontrado = cuentas.find(
-      (u) => u.correo.toLowerCase() === correo.trim().toLowerCase() && u.password === password
-    );
-
-    if (usuarioEncontrado) {
-      onLogin(usuarioEncontrado);
+    setCargando(true);
+    try {
+      const usuario = await login(correo, password);
+      onLogin(usuario);
       navigate('/panel');
-    } else {
-      setError('Credenciales incorrectas. Verifique su correo corporativo y contraseña.');
+    } catch (err) {
+      setError(err.message || 'Credenciales incorrectas.');
+    } finally {
+      setCargando(false);
     }
   };
 
@@ -69,8 +70,12 @@ export default function LoginPage({ cuentas, onLogin }) {
               />
             </div>
 
-            <button type="submit" className="btn btn-primary btn-sm w-100 fw-semibold py-2 mb-3">
-              Ingresar al Panel
+            <button
+              type="submit"
+              className="btn btn-primary btn-sm w-100 fw-semibold py-2 mb-3"
+              disabled={cargando}
+            >
+              {cargando ? 'Ingresando...' : 'Ingresar al Panel'}
             </button>
           </form>
 
