@@ -1,6 +1,9 @@
 package cl.aquachile.evalpsi.controller;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,11 +16,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import cl.aquachile.evalpsi.dto.PageResponse;
 import cl.aquachile.evalpsi.dto.solicitud.ActualizarEvaluacionRequest;
 import cl.aquachile.evalpsi.dto.solicitud.SolicitudRequest;
 import cl.aquachile.evalpsi.dto.solicitud.SolicitudResponse;
+import cl.aquachile.evalpsi.service.GoogleDriveService;
 import cl.aquachile.evalpsi.service.SolicitudService;
 import jakarta.validation.Valid;
 
@@ -76,5 +81,24 @@ public class SolicitudController {
     @PreAuthorize("hasAnyRole('ADMIN', 'EVALUADOR')")
     public void eliminar(@PathVariable Long id) {
         solicitudService.eliminar(id);
+    }
+
+    @PostMapping("/{id}/cv")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ANALISTA', 'EVALUADOR')")
+    public SolicitudResponse subirCv(@PathVariable Long id,
+                                     @RequestParam("archivo") MultipartFile archivo) {
+        return solicitudService.subirCv(id, archivo);
+    }
+
+    @GetMapping("/{id}/cv")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ANALISTA', 'EVALUADOR')")
+    public ResponseEntity<byte[]> descargarCv(@PathVariable Long id) {
+        GoogleDriveService.Archivo archivo = solicitudService.descargarCv(id);
+        String nombre = archivo.nombre() == null ? "cv" : archivo.nombre().replace("\"", "");
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(archivo.contentType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + nombre + "\"")
+                .body(archivo.contenido());
     }
 }

@@ -24,10 +24,14 @@ public class CuentaService {
 
     private final CuentaRepository cuentaRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
-    public CuentaService(CuentaRepository cuentaRepository, PasswordEncoder passwordEncoder) {
+    public CuentaService(CuentaRepository cuentaRepository,
+                         PasswordEncoder passwordEncoder,
+                         EmailService emailService) {
         this.cuentaRepository = cuentaRepository;
         this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
     }
 
     @Transactional(readOnly = true)
@@ -56,7 +60,9 @@ public class CuentaService {
                 .fechaAlta(LocalDate.now())
                 .build();
 
-        return CuentaMapper.toResponse(cuentaRepository.save(cuenta));
+        Cuenta guardada = cuentaRepository.save(cuenta);
+        emailService.bienvenida(guardada.getCorreo(), guardada.getNombre(), guardada.getRol().name());
+        return CuentaMapper.toResponse(guardada);
     }
 
     @Transactional
