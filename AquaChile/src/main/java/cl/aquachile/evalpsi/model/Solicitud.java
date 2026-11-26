@@ -1,5 +1,6 @@
 package cl.aquachile.evalpsi.model;
 
+import java.time.Instant;
 import java.time.LocalDate;
 
 import cl.aquachile.evalpsi.enums.EstadoSolicitud;
@@ -16,6 +17,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -65,6 +67,9 @@ public class Solicitud {
     @Column(name = "cv_adjunto", columnDefinition = "text")
     private String cvAdjunto;
 
+    @Column(name = "cv_drive_file_id", columnDefinition = "text")
+    private String cvDriveFileId;
+
     @Convert(converter = EstadoSolicitudConverter.class)
     @Column(nullable = false, columnDefinition = "text")
     private EstadoSolicitud estado;
@@ -75,4 +80,8 @@ public class Solicitud {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(nullable = false, columnDefinition = "jsonb")
     private Evaluacion evaluacion;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
 }

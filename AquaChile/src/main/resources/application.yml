@@ -8,6 +8,11 @@ spring:
       - "optional:file:./.env[.properties]"
       - "optional:file:./AquaChile/.env[.properties]"
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 11MB
+
   datasource:
     # En Supabase se usa el Session Pooler: jdbc:postgresql://...:5432/postgres?sslmode=require
     url: ${DB_URL:jdbc:h2:mem:aquachile;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}

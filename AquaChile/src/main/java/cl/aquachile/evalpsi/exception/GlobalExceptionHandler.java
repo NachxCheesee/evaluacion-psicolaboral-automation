@@ -13,6 +13,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import cl.aquachile.evalpsi.dto.ApiError;
@@ -136,6 +137,43 @@ public class GlobalExceptionHandler {
                 request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiError> handleMaxUpload(MaxUploadSizeExceededException ex,
+                                                    HttpServletRequest request) {
+        ApiError body = new ApiError(
+                HttpStatus.PAYLOAD_TOO_LARGE.value(),
+                "Payload Too Large",
+                "El archivo supera el tamaño máximo permitido (10 MB).",
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(body);
+    }
+
+    @ExceptionHandler(DriveException.class)
+    public ResponseEntity<ApiError> handleDrive(DriveException ex,
+                                                HttpServletRequest request) {
+        log.error("Fallo en Google Drive en {}: {}", request.getRequestURI(), ex.getMessage());
+        ApiError body = new ApiError(
+                HttpStatus.BAD_GATEWAY.value(),
+                "Bad Gateway",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(body);
+    }
+
+    @ExceptionHandler(PostulacionesExcedidasException.class)
+    public ResponseEntity<ApiError> handlePostulaciones(PostulacionesExcedidasException ex,
+                                                        HttpServletRequest request) {
+        ApiError body = new ApiError(
+                HttpStatus.TOO_MANY_REQUESTS.value(),
+                "Too Many Requests",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(body);
     }
 
     @ExceptionHandler(Exception.class)
