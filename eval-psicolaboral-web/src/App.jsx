@@ -18,6 +18,7 @@ import {
   actualizarCuenta,
   eliminarCuenta
 } from './services/cuentas';
+import { guardarAnalisisIASolicitud } from './services/ia';
 
 import HomePage from './pages/HomePage';
 import PostularPage from './pages/PostularPage';
@@ -168,6 +169,24 @@ export default function App() {
     }
 
     await actualizarSolicitud(solicitudEditada, usuarioActual?.id ?? null);
+
+    if (
+      Object.prototype.hasOwnProperty.call(solicitudEditada, 'compatibilidad') ||
+      Object.prototype.hasOwnProperty.call(solicitudEditada, 'comentarioIA') ||
+      Object.prototype.hasOwnProperty.call(solicitudEditada, 'alertaCV')
+    ) {
+      await guardarAnalisisIASolicitud(
+        {
+          solicitudId: solicitudEditada.id,
+          compatibilidad: solicitudEditada.compatibilidad,
+          comentario: solicitudEditada.comentarioIA,
+          alerta: solicitudEditada.alertaCV,
+          analisis: solicitudEditada.iaAnalisis
+        },
+        usuarioActual?.id ?? null
+      );
+    }
+
     await refrescarSolicitudes();
     return solicitudEditada;
   };

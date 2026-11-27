@@ -19,6 +19,7 @@ import ModalEditarCandidato from '../components/modals/ModalEditarCandidato';
 import ModalEvaluacion from '../components/modals/ModalEvaluacion';
 import ModalConfirmarEliminar from '../components/modals/ModalConfirmarEliminar';
 import ModalEditarUsuario from '../components/modals/ModalEditarUsuario';
+import ConfiguracionIA from '../components/ia/ConfiguracionIA';
 
 export default function PanelPage({
   usuarioActual,
@@ -86,6 +87,13 @@ export default function PanelPage({
                 onClick={() => setTabActiva('usuarios')}
               >
                 Gestión de Usuarios ({cuentas.length})
+              </button>
+              <button
+                type="button"
+                className={`btn ${tabActiva === 'ia' ? 'btn-primary' : 'btn-outline-primary'}`}
+                onClick={() => setTabActiva('ia')}
+              >
+                Configuración IA
               </button>
             </div>
           )}
@@ -158,6 +166,11 @@ export default function PanelPage({
               onEliminarUsuario={onEliminarUsuario}
             />
           </>
+        )}
+
+        {/* PESTAÑA 3: CONFIGURACIÓN IA */}
+        {tabActiva === 'ia' && usuarioActual.rol === 'ADMIN' && (
+          <ConfiguracionIA usuarioActual={usuarioActual} modoDemo={modoDemo} />
         )}
       </main>
 

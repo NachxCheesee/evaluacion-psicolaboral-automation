@@ -6,6 +6,24 @@
 -- a cuentas ni a solicitudes con la anon key.
 -- ============================================================
 
+-- 0. Compatibilidad para bases ya migradas --------------------
+
+alter table public.solicitudes
+  add column if not exists es_interno boolean;
+
+update public.solicitudes
+set es_interno = false
+where es_interno is null;
+
+alter table public.solicitudes
+  alter column es_interno set default false;
+
+alter table public.solicitudes
+  alter column es_interno set not null;
+
+alter table public.historial_cambios
+  add column if not exists solicitud_id bigint;
+
 -- 1. Funciones auxiliares -------------------------------------
 
 create or replace function public.fn_normalizar_rut(p_rut text)
@@ -49,6 +67,23 @@ begin
 end;
 $$;
 
+create or replace function public.fn_solicitud_id_auditoria(
+  p_tabla text,
+  p_data jsonb
+)
+returns bigint
+language sql
+immutable
+as $$
+  select case
+    when p_data is null then null
+    when p_tabla = 'solicitudes' then nullif(p_data->>'id', '')::bigint
+    when p_tabla in ('evaluaciones', 'documentos')
+      then nullif(p_data->>'solicitud_id', '')::bigint
+    else null
+  end;
+$$;
+
 create or replace function public.fn_auditar_cambios()
 returns trigger
 language plpgsql
@@ -70,9 +105,14 @@ begin
   if tg_op = 'DELETE' then
     v_old := to_jsonb(old);
     insert into public.historial_cambios (
-      tabla, registro_id, accion, datos_anteriores, usuario_id
+      tabla, registro_id, solicitud_id, accion, datos_anteriores, usuario_id
     ) values (
-      tg_table_name, (v_old->>'id')::bigint, 'DELETE', v_old, v_usuario
+      tg_table_name,
+      (v_old->>'id')::bigint,
+      public.fn_solicitud_id_auditoria(tg_table_name, v_old),
+      'DELETE',
+      v_old,
+      v_usuario
     );
     return old;
   elsif tg_op = 'UPDATE' then
@@ -82,17 +122,28 @@ begin
       return new;
     end if;
     insert into public.historial_cambios (
-      tabla, registro_id, accion, datos_anteriores, datos_nuevos, usuario_id
+      tabla, registro_id, solicitud_id, accion, datos_anteriores, datos_nuevos, usuario_id
     ) values (
-      tg_table_name, (v_new->>'id')::bigint, 'UPDATE', v_old, v_new, v_usuario
+      tg_table_name,
+      (v_new->>'id')::bigint,
+      public.fn_solicitud_id_auditoria(tg_table_name, v_new),
+      'UPDATE',
+      v_old,
+      v_new,
+      v_usuario
     );
     return new;
   else
     v_new := to_jsonb(new);
     insert into public.historial_cambios (
-      tabla, registro_id, accion, datos_nuevos, usuario_id
+      tabla, registro_id, solicitud_id, accion, datos_nuevos, usuario_id
     ) values (
-      tg_table_name, (v_new->>'id')::bigint, 'INSERT', v_new, v_usuario
+      tg_table_name,
+      (v_new->>'id')::bigint,
+      public.fn_solicitud_id_auditoria(tg_table_name, v_new),
+      'INSERT',
+      v_new,
+      v_usuario
     );
     return new;
   end if;
@@ -508,27 +559,12 @@ begin
 end;
 $$;
 
-create or replace function public.fn_resolver_origen(p_origen text)
-returns bigint
-language plpgsql
-security definer
-set search_path = public, extensions
+create or replace function public.fn_origen_interno(p_origen text)
+returns boolean
+language sql
+immutable
 as $$
-declare
-  v_id bigint;
-begin
-  select id into v_id
-  from public.origenes_solicitud
-  where lower(nombre) = lower(trim(p_origen))
-     or lower(codigo) = lower(replace(trim(p_origen), ' ', '_'))
-  limit 1;
-
-  if v_id is null then
-    select id into v_id from public.origenes_solicitud where codigo = 'EXTERNO';
-  end if;
-
-  return v_id;
-end;
+  select lower(trim(coalesce(p_origen, ''))) = 'interno';
 $$;
 
 create or replace function public.fn_resolver_estado(p_estado text)
@@ -657,7 +693,7 @@ declare
   v_direccion text := nullif(trim(p_payload->>'direccion'), '');
   v_observaciones text := nullif(trim(p_payload->>'observaciones'), '');
   v_cv text := nullif(trim(p_payload->>'cvArchivo'), '');
-  v_origen text := coalesce(nullif(trim(p_payload->>'origen'), ''), 'Externo');
+  v_es_interno boolean := public.fn_origen_interno(p_payload->>'origen');
   v_fecha_texto text := nullif(trim(p_payload->>'fecha'), '');
   v_fecha date;
   v_candidato_id bigint;
@@ -665,7 +701,6 @@ declare
   v_familia_id bigint;
   v_familia_nombre text;
   v_estado_id bigint;
-  v_origen_id bigint;
   v_solicitud_id bigint;
   v_codigo text;
   v_usuario_nombre text;
@@ -694,13 +729,12 @@ begin
   from public.fn_resolver_cargo(v_cargo, v_familia) fc;
 
   v_estado_id := public.fn_resolver_estado('Pendiente');
-  v_origen_id := public.fn_resolver_origen(v_origen);
 
   insert into public.solicitudes (
     rut, candidato, correo, telefono, direccion, cargo, familia_cargo,
     fecha_solicitud, solicitado_por, responsable, cv_adjunto, estado,
     observaciones, evaluacion, candidato_id, cargo_id, familia_cargo_id,
-    estado_id, origen_id, solicitado_por_id, prioridad, created_at, updated_at
+    estado_id, es_interno, solicitado_por_id, prioridad, created_at, updated_at
   ) values (
     v_rut, v_nombre, v_email, v_telefono, v_direccion, v_cargo, v_familia_nombre,
     v_fecha, coalesce(v_usuario_nombre, 'Portal Público Web'), null, v_cv, 'Pendiente',
@@ -712,7 +746,7 @@ begin
       'archivoTranscripcion', '',
       'archivoInformeFinal', ''
     ),
-    v_candidato_id, v_cargo_id, v_familia_id, v_estado_id, v_origen_id,
+    v_candidato_id, v_cargo_id, v_familia_id, v_estado_id, v_es_interno,
     p_usuario_id, 'MEDIA', now(), now()
   )
   returning id, codigo into v_solicitud_id, v_codigo;
@@ -752,7 +786,7 @@ declare
   v_direccion_actual text;
   v_cargo_actual text;
   v_familia_actual text;
-  v_origen_actual text;
+  v_es_interno_actual boolean;
   v_candidato_id bigint;
   v_rut text;
   v_nombre text;
@@ -761,12 +795,11 @@ declare
   v_direccion text;
   v_cargo text;
   v_familia text;
-  v_origen text;
+  v_es_interno boolean;
   v_cv text;
   v_cargo_id bigint;
   v_familia_id bigint;
   v_familia_nombre text;
-  v_origen_id bigint;
 begin
   if v_solicitud_id is null then
     raise exception 'Falta el id de la solicitud.';
@@ -774,13 +807,12 @@ begin
 
   select
     s.rut, s.candidato, s.correo, s.telefono, s.direccion, s.cargo,
-    s.familia_cargo, o.nombre, s.candidato_id
+    s.familia_cargo, s.es_interno, s.candidato_id
   into
     v_rut_actual, v_nombre_actual, v_correo_actual, v_telefono_actual,
-    v_direccion_actual, v_cargo_actual, v_familia_actual, v_origen_actual,
+    v_direccion_actual, v_cargo_actual, v_familia_actual, v_es_interno_actual,
     v_candidato_id
   from public.solicitudes s
-  left join public.origenes_solicitud o on o.id = s.origen_id
   where s.id = v_solicitud_id;
 
   if not found then
@@ -796,7 +828,10 @@ begin
   v_direccion := coalesce(nullif(trim(p_payload->>'direccion'), ''), v_direccion_actual);
   v_cargo := coalesce(nullif(trim(p_payload->>'cargo'), ''), v_cargo_actual);
   v_familia := coalesce(nullif(trim(p_payload->>'familiaCargo'), ''), v_familia_actual);
-  v_origen := coalesce(nullif(trim(p_payload->>'origen'), ''), v_origen_actual, 'Externo');
+  v_es_interno := case
+    when nullif(trim(p_payload->>'origen'), '') is null then v_es_interno_actual
+    else public.fn_origen_interno(p_payload->>'origen')
+  end;
   v_cv := nullif(trim(p_payload->>'cvArchivo'), '');
 
   if v_candidato_id is null then
@@ -819,8 +854,6 @@ begin
   into v_cargo_id, v_familia_id, v_familia_nombre
   from public.fn_resolver_cargo(v_cargo, v_familia) fc;
 
-  v_origen_id := public.fn_resolver_origen(v_origen);
-
   update public.solicitudes
   set rut = v_rut,
       candidato = v_nombre,
@@ -833,7 +866,7 @@ begin
       candidato_id = v_candidato_id,
       cargo_id = v_cargo_id,
       familia_cargo_id = v_familia_id,
-      origen_id = v_origen_id,
+      es_interno = v_es_interno,
       updated_at = now()
   where id = v_solicitud_id;
 
@@ -1161,6 +1194,8 @@ $$;
 
 -- 6. RPC de historial -----------------------------------------
 
+drop function if exists public.listar_historial(text, bigint, integer);
+
 create or replace function public.listar_historial(
   p_tabla text default null,
   p_registro_id bigint default null,
@@ -1170,6 +1205,7 @@ returns table (
   id bigint,
   tabla text,
   registro_id bigint,
+  solicitud_id bigint,
   accion text,
   datos_anteriores jsonb,
   datos_nuevos jsonb,
@@ -1185,6 +1221,7 @@ as $$
     h.id,
     h.tabla,
     h.registro_id,
+    h.solicitud_id,
     h.accion,
     h.datos_anteriores,
     h.datos_nuevos,
@@ -1201,6 +1238,9 @@ $$;
 
 -- 7. Vistas ---------------------------------------------------
 
+drop view if exists public.vw_historial_solicitudes;
+drop view if exists public.vw_solicitudes_completas;
+
 create or replace view public.vw_solicitudes_completas as
 select
   s.id,
@@ -1210,7 +1250,7 @@ select
   s.cargo,
   coalesce(fc.nombre, s.familia_cargo) as familia_cargo,
   coalesce(u.nombre, nullif(s.solicitado_por, ''), 'Portal Público Web') as emisor,
-  coalesce(o.nombre, 'Externo') as origen,
+  case when s.es_interno then 'Interno' else 'Externo' end as origen,
   coalesce(es.nombre, s.estado) as estado,
   s.fecha_solicitud as fecha,
   coalesce(s.telefono, c.telefono) as contacto,
@@ -1229,7 +1269,7 @@ select
   s.cargo_id,
   s.familia_cargo_id,
   s.estado_id,
-  s.origen_id,
+  s.es_interno,
   s.solicitado_por_id,
   s.evaluador_asignado_id,
   s.prioridad,
@@ -1239,7 +1279,6 @@ from public.solicitudes s
 left join public.candidatos c on c.id = s.candidato_id
 left join public.familias_cargo fc on fc.id = s.familia_cargo_id
 left join public.cuentas u on u.id = s.solicitado_por_id
-left join public.origenes_solicitud o on o.id = s.origen_id
 left join public.estados_solicitud es on es.id = s.estado_id
 left join public.evaluaciones e on e.solicitud_id = s.id
 left join public.resultados_evaluacion re on re.id = e.resultado_id
@@ -1284,6 +1323,7 @@ select
   h.id,
   h.tabla,
   h.registro_id,
+  h.solicitud_id,
   h.accion,
   h.datos_anteriores,
   h.datos_nuevos,
@@ -1392,7 +1432,6 @@ grant select on public.estados_candidato to anon, authenticated;
 grant select on public.familias_cargo to anon, authenticated;
 grant select on public.cargos to anon, authenticated;
 grant select on public.resultados_evaluacion to anon, authenticated;
-grant select on public.origenes_solicitud to anon, authenticated;
 grant select on public.tipos_documento to anon, authenticated;
 grant select on public.tipos_entrevista to anon, authenticated;
 

@@ -22,7 +22,10 @@ export default function ModalEditarCandidato({
     email: solicitud?.email || '',
     direccion: solicitud?.direccion || '',
     observaciones: solicitud?.observaciones || '',
-    cvArchivo: solicitud?.cvArchivo || null
+    cvArchivo: solicitud?.cvArchivo || null,
+    compatibilidad: solicitud?.compatibilidad ?? '',
+    comentarioIA: solicitud?.comentarioIA || '',
+    alertaCV: Boolean(solicitud?.alertaCV)
   });
 
   const [nuevoCvNombre, setNuevoCvNombre] = useState('');
@@ -41,8 +44,21 @@ export default function ModalEditarCandidato({
   if (!solicitud) return null;
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const formatearFechaIA = (valor) => {
+    if (!valor) return 'Sin actualizaciones registradas';
+    const fecha = new Date(valor);
+    if (Number.isNaN(fecha.getTime())) return 'Sin actualizaciones registradas';
+    return fecha.toLocaleString('es-CL', {
+      dateStyle: 'short',
+      timeStyle: 'short'
+    });
   };
 
   const handleFileChange = (e) => {
@@ -56,6 +72,17 @@ export default function ModalEditarCandidato({
   const handleDescargarActual = () => {
     alert(`Descargando CV registrado: ${formData.cvArchivo}`);
   };
+
+  const compatibilidadNumero = Number(formData.compatibilidad);
+  const tieneCompatibilidad =
+    formData.compatibilidad !== '' && Number.isFinite(compatibilidadNumero);
+  const colorCompatibilidad = !tieneCompatibilidad
+    ? 'bg-secondary'
+    : compatibilidadNumero >= 80
+      ? 'bg-success'
+      : compatibilidadNumero >= 60
+        ? 'bg-warning'
+        : 'bg-danger';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -237,6 +264,85 @@ export default function ModalEditarCandidato({
                       className="form-control form-control-sm"
                       onChange={handleFileChange}
                     />
+                  </div>
+                </div>
+
+                {/* Análisis IA */}
+                <div className="col-12">
+                  <div className="p-3 bg-white rounded-3 border">
+                    <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                      <label className="form-label small fw-semibold text-dark d-flex align-items-center gap-2 mb-0">
+                        <i className="bi bi-stars text-primary fs-5"></i>
+                        <span>Análisis IA del CV</span>
+                      </label>
+                      <span className={`badge ${tieneCompatibilidad ? 'bg-primary' : 'bg-secondary'}`}>
+                        {tieneCompatibilidad ? `${compatibilidadNumero}% compatible` : 'Sin compatibilidad definida'}
+                      </span>
+                    </div>
+
+                    <div className="row g-3">
+                      <div className="col-md-4">
+                        <label className="form-label small fw-semibold">Compatibilidad con el cargo</label>
+                        <div className="input-group input-group-sm">
+                          <input
+                            type="number"
+                            name="compatibilidad"
+                            min="0"
+                            max="100"
+                            step="1"
+                            className="form-control form-control-sm"
+                            value={formData.compatibilidad}
+                            onChange={handleChange}
+                            placeholder="0"
+                          />
+                          <span className="input-group-text">%</span>
+                        </div>
+                        <div className="progress mt-2" style={{ height: '8px' }}>
+                          <div
+                            className={`progress-bar ${colorCompatibilidad}`}
+                            style={{ width: `${tieneCompatibilidad ? compatibilidadNumero : 0}%` }}
+                          ></div>
+                        </div>
+                        <div className="small text-muted mt-1">
+                          Puede modificarse manualmente.
+                        </div>
+                      </div>
+
+                      <div className="col-md-8">
+                        <label className="form-label small fw-semibold">Comentario de IA sobre el CV</label>
+                        <textarea
+                          name="comentarioIA"
+                          rows="3"
+                          className="form-control form-control-sm"
+                          value={formData.comentarioIA}
+                          onChange={handleChange}
+                          placeholder="Ej. El CV declara experiencia en buceo, pero no adjunta certificaciones vigentes ni horas de inmersión."
+                        ></textarea>
+                      </div>
+
+                      <div className="col-12">
+                        <div className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            name="alertaCV"
+                            id="alertaCV"
+                            checked={formData.alertaCV}
+                            onChange={handleChange}
+                          />
+                          <label className="form-check-label small" htmlFor="alertaCV">
+                            Posible inconsistencia o CV no confiable
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="col-12 small text-muted">
+                        Última actualización: <strong>{formatearFechaIA(solicitud?.iaActualizadoAt)}</strong>
+                        {solicitud?.iaActualizadoPorNombre
+                          ? ` por ${solicitud.iaActualizadoPorNombre}`
+                          : ''}
+                      </div>
+                    </div>
                   </div>
                 </div>
 

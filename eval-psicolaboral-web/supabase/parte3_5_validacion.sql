@@ -1,7 +1,7 @@
 -- ============================================================
 -- Parte 3.5 - Validacion posterior a la migracion (AquaChile)
 -- ------------------------------------------------------------
--- Ejecutar DESPUES de parte3_4_vistas_rpc_triggers.sql.
+-- Ejecutar DESPUES de parte5_ia_compatibilidad.sql.
 -- Es un script de solo lectura: no modifica datos ni objetos.
 -- ============================================================
 
@@ -18,7 +18,6 @@ union all select 'estados_candidato', to_regclass('public.estados_candidato') is
 union all select 'familias_cargo', to_regclass('public.familias_cargo') is not null
 union all select 'cargos', to_regclass('public.cargos') is not null
 union all select 'resultados_evaluacion', to_regclass('public.resultados_evaluacion') is not null
-union all select 'origenes_solicitud', to_regclass('public.origenes_solicitud') is not null
 union all select 'tipos_documento', to_regclass('public.tipos_documento') is not null
 union all select 'tipos_entrevista', to_regclass('public.tipos_entrevista') is not null
 union all select 'candidatos', to_regclass('public.candidatos') is not null
@@ -29,6 +28,7 @@ union all select 'historial_estados_solicitud', to_regclass('public.historial_es
 union all select 'vw_solicitudes_completas', to_regclass('public.vw_solicitudes_completas') is not null
 union all select 'vw_usuarios_publicos', to_regclass('public.vw_usuarios_publicos') is not null
 union all select 'vw_historial_solicitudes', to_regclass('public.vw_historial_solicitudes') is not null
+union all select 'configuracion_ia', to_regclass('public.configuracion_ia') is not null
 order by objeto;
 
 -- 2. RPC requeridas por el frontend ---------------------------
@@ -48,7 +48,12 @@ where n.nspname = 'public'
     'crear_usuario',
     'actualizar_usuario',
     'eliminar_usuario',
-    'listar_historial'
+    'listar_historial',
+    'guardar_analisis_ia_solicitud',
+    'obtener_configuracion_ia',
+    'guardar_configuracion_ia',
+    'listar_cargos_ia',
+    'guardar_perfil_cargo_ia'
   )
 order by p.proname;
 
@@ -63,10 +68,121 @@ union all select 'estados_candidato', count(*) from public.estados_candidato
 union all select 'familias_cargo', count(*) from public.familias_cargo
 union all select 'cargos', count(*) from public.cargos
 union all select 'resultados_evaluacion', count(*) from public.resultados_evaluacion
-union all select 'origenes_solicitud', count(*) from public.origenes_solicitud
 union all select 'tipos_documento', count(*) from public.tipos_documento
 union all select 'tipos_entrevista', count(*) from public.tipos_entrevista
 order by catalogo;
+
+-- 3.1 Columnas del esquema nuevo ------------------------------
+
+select
+  exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'solicitudes'
+      and column_name = 'es_interno'
+  ) as tiene_es_interno,
+  not exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'solicitudes'
+      and column_name = 'origen_id'
+  ) as sin_origen_id,
+  not exists (
+    select 1 from pg_class c
+    join pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'public'
+      and c.relname = 'origenes_solicitud'
+  ) as sin_tabla_origenes,
+  not exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'historial_cambios'
+      and column_name = 'ip'
+  ) as historial_sin_ip,
+  not exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'historial_cambios'
+      and column_name = 'user_agent'
+  ) as historial_sin_user_agent,
+  exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'historial_cambios'
+      and column_name = 'solicitud_id'
+  ) as historial_con_solicitud_id,
+  not exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'historial_accesos'
+      and column_name in ('ip', 'user_agent')
+  ) as accesos_sin_ip_user_agent;
+
+-- 3.2 Columnas del modulo IA ----------------------------------
+
+select
+  exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'solicitudes'
+      and column_name = 'compatibilidad_porcentaje'
+  ) as tiene_compatibilidad,
+  exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'solicitudes'
+      and column_name = 'comentario_ia_cv'
+  ) as tiene_comentario_ia,
+  exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'solicitudes'
+      and column_name = 'alerta_cv_inconsistente'
+  ) as tiene_alerta_cv,
+  exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'solicitudes'
+      and column_name = 'ia_actualizado_por'
+  ) as tiene_ia_actualizado_por,
+  exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'solicitudes'
+      and column_name = 'ia_actualizado_at'
+  ) as tiene_ia_actualizado_at,
+  exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'cargos'
+      and column_name = 'perfil_ia'
+  ) as tiene_perfil_cargo,
+  exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'vw_solicitudes_completas'
+      and column_name = 'compatibilidad_porcentaje'
+  ) as vista_tiene_compatibilidad,
+  exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'vw_solicitudes_completas'
+      and column_name = 'ia_actualizado_por'
+  ) as vista_tiene_ia_actualizado_por,
+  exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'vw_solicitudes_completas'
+      and column_name = 'ia_actualizado_at'
+  ) as vista_tiene_ia_actualizado_at;
+
+select count(*) as configuracion_ia_filas
+from public.configuracion_ia;
+
+select 'solicitudes_compatibilidad_fuera_rango' as problema, count(*) as filas
+from public.solicitudes
+where compatibilidad_porcentaje is not null
+  and (compatibilidad_porcentaje < 0 or compatibilidad_porcentaje > 100);
 
 -- 4. Integridad referencial -----------------------------------
 
@@ -84,7 +200,7 @@ where estado_id is null
 union all
 select 'solicitudes_sin_origen', count(*)
 from public.solicitudes
-where origen_id is null
+where es_interno is null
 union all
 select 'solicitudes_sin_codigo', count(*)
 from public.solicitudes

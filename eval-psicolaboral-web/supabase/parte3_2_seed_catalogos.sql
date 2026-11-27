@@ -189,18 +189,7 @@ set nombre = excluded.nombre,
     es_final = excluded.es_final,
     activo = excluded.activo;
 
--- 7. Origenes ------------------------------------------------
-
-insert into public.origenes_solicitud (codigo, nombre, activo)
-values
-  ('EXTERNO', 'Externo', true),
-  ('INTERNO', 'Interno', true),
-  ('CARGA_MASIVA', 'Carga masiva', true)
-on conflict (codigo) do update
-set nombre = excluded.nombre,
-    activo = excluded.activo;
-
--- 8. Tipos de documento y entrevista --------------------------
+-- 7. Tipos de documento y entrevista --------------------------
 
 insert into public.tipos_documento (codigo, nombre, obligatorio, activo)
 values
@@ -223,7 +212,7 @@ on conflict (codigo) do update
 set nombre = excluded.nombre,
     activo = excluded.activo;
 
--- 9. Parametros iniciales -------------------------------------
+-- 8. Parametros iniciales -------------------------------------
 
 insert into public.parametros_sistema (clave, valor, descripcion)
 values

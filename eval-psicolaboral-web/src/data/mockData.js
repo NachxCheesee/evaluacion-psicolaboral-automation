@@ -312,6 +312,34 @@ export const SOLICITUDES_INICIALES = [
   }
 ];
 
+const DEMO_IA_POR_SOLICITUD = {
+  1: { compatibilidad: 84, comentarioIA: 'CV con experiencia directa en plantas de proceso y disponibilidad para turnos. Buen ajuste general al perfil.', alertaCV: false },
+  2: { compatibilidad: 77, comentarioIA: 'Experiencia en cultivo y supervisión de cuadrillas. El CV respalda el liderazgo declarado.', alertaCV: false },
+  3: { compatibilidad: 88, comentarioIA: 'Formación y experiencia alineadas con mantención y frío industrial. Alto ajuste.', alertaCV: false },
+  4: { compatibilidad: 62, comentarioIA: 'El CV declara manejo de fotoperíodo, pero no detalla registros ni certificaciones. Requiere validación.', alertaCV: true },
+  5: { compatibilidad: 81, comentarioIA: 'Experiencia en calidad y auditorías internas. Buen ajuste al perfil.', alertaCV: false },
+  6: { compatibilidad: 59, comentarioIA: 'El CV no acredita licencia vigente ni horas de operación de grúa horquilla. Alerta de inconsistencia.', alertaCV: true },
+  7: { compatibilidad: 74, comentarioIA: 'Experiencia logística y manejo de inventario. Ajuste medio alto.', alertaCV: false },
+  8: { compatibilidad: 90, comentarioIA: 'Perfil de laboratorio y microbiología con experiencia comprobable. Alto ajuste.', alertaCV: false },
+  9: { compatibilidad: 68, comentarioIA: 'Experiencia en faena y disponibilidad para turnos. Ajuste medio.', alertaCV: false },
+  10: { compatibilidad: 55, comentarioIA: 'Declara experiencia en buceo, pero no adjunta certificaciones ni bitácora de inmersiones. Alerta.', alertaCV: true },
+  11: { compatibilidad: 86, comentarioIA: 'Experiencia en cultivo y manejo de equipos. Buen ajuste.', alertaCV: false },
+  12: { compatibilidad: 72, comentarioIA: 'Experiencia administrativa y manejo de inventario. Ajuste medio alto.', alertaCV: false },
+  13: { compatibilidad: 79, comentarioIA: 'Formación técnica y experiencia en alimentación de cultivos. Buen ajuste.', alertaCV: false },
+  14: { compatibilidad: 64, comentarioIA: 'Experiencia en logística, aunque el CV no detalla renovación de licencia. Requiere validación.', alertaCV: false },
+  15: { compatibilidad: 92, comentarioIA: 'Microbióloga con experiencia en PCR y detección de patógenos. Alto ajuste.', alertaCV: false }
+};
+
+SOLICITUDES_INICIALES.forEach((solicitud, indice) => {
+  const analisis = DEMO_IA_POR_SOLICITUD[solicitud.id];
+  if (!analisis) return;
+
+  Object.assign(solicitud, analisis, {
+    iaActualizadoAt: `2026-11-${String(24 - (indice % 10)).padStart(2, '0')}T12:00:00Z`,
+    iaActualizadoPorNombre: indice % 3 === 0 ? 'Administrador General' : 'María Victoria Bustamante'
+  });
+});
+
 export const CUENTAS_AUTORIZADAS = [
   {
     id: 1,

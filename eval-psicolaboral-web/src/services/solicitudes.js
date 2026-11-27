@@ -21,7 +21,14 @@ const CAMPOS = [
   "resultado",
   "fecha_entrevista",
   "observaciones_evaluador",
-  "evaluacion"
+  "evaluacion",
+  "compatibilidad_porcentaje",
+  "comentario_ia_cv",
+  "alerta_cv_inconsistente",
+  "ia_analisis",
+  "ia_actualizado_por",
+  "ia_actualizado_por_nombre",
+  "ia_actualizado_at"
 ].join(", ");
 
 const EVALUACION_VACIA = {
@@ -57,7 +64,14 @@ export function mapearSolicitud(fila) {
     resultado: fila.resultado,
     fechaEntrevista: fila.fecha_entrevista,
     observacionesEvaluador: fila.observaciones_evaluador,
-    evaluacion: { ...EVALUACION_VACIA, ...(fila.evaluacion || {}) }
+    evaluacion: { ...EVALUACION_VACIA, ...(fila.evaluacion || {}) },
+    compatibilidad: fila.compatibilidad_porcentaje,
+    comentarioIA: fila.comentario_ia_cv || "",
+    alertaCV: Boolean(fila.alerta_cv_inconsistente),
+    iaAnalisis: fila.ia_analisis || null,
+    iaActualizadoPor: fila.ia_actualizado_por,
+    iaActualizadoPorNombre: fila.ia_actualizado_por_nombre || "",
+    iaActualizadoAt: fila.ia_actualizado_at
   };
 }
 

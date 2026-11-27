@@ -24,11 +24,6 @@ export const CATALOGOS_DEMO = {
     },
     { codigo: "NO_RECOMENDABLE", nombre: "No Recomendable" }
   ],
-  origenes: [
-    { codigo: "EXTERNO", nombre: "Externo" },
-    { codigo: "INTERNO", nombre: "Interno" },
-    { codigo: "CARGA_MASIVA", nombre: "Carga masiva" }
-  ],
   estadosSolicitud: [
     { codigo: "PENDIENTE", nombre: "Pendiente" },
     { codigo: "EN_PROCESO", nombre: "En proceso" },
@@ -58,7 +53,6 @@ export async function listarCatalogos() {
     familias,
     cargos,
     resultados,
-    origenes,
     estadosSolicitud,
     estadosUsuario,
     tiposDocumento,
@@ -75,7 +69,6 @@ export async function listarCatalogos() {
         .eq("activo", true)
         .order("nombre")
     ),
-    resolver(cliente().from("origenes_solicitud").select("id, codigo, nombre").eq("activo", true).order("nombre")),
     resolver(
       cliente()
         .from("estados_solicitud")
@@ -103,7 +96,6 @@ export async function listarCatalogos() {
     cargos: cargosMapeados,
     cargosNombres: cargosMapeados.map((cargo) => cargo.nombre),
     resultados: resultados || [],
-    origenes: origenes || [],
     estadosSolicitud: estadosSolicitud || [],
     estadosUsuario: estadosUsuario || [],
     tiposDocumento: tiposDocumento || [],

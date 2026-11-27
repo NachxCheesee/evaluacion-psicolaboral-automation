@@ -95,7 +95,7 @@ from public.cargos c
 where s.cargo_id is null
   and lower(c.nombre) = lower(trim(s.cargo));
 
--- 4. Estados y origenes ---------------------------------------
+-- 4. Estados --------------------------------------------------
 
 update public.solicitudes s
 set estado_id = e.id
@@ -107,12 +107,6 @@ where s.estado_id is null
     when 'finalizada' then 'FINALIZADA'
     else 'PENDIENTE'
   end;
-
-update public.solicitudes s
-set origen_id = o.id
-from public.origenes_solicitud o
-where s.origen_id is null
-  and o.codigo = 'EXTERNO';
 
 -- 5. Usuarios relacionados ------------------------------------
 
