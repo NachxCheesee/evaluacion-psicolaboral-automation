@@ -1,7 +1,9 @@
-import React, { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function ModalConfirmarEliminar({ solicitud, onClose, onCerrar, onConfirmar }) {
   const cerrarModal = onClose || onCerrar || (() => {});
+  const [eliminando, setEliminando] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -12,6 +14,19 @@ export default function ModalConfirmarEliminar({ solicitud, onClose, onCerrar, o
   }, [cerrarModal]);
 
   if (!solicitud) return null;
+
+  const handleConfirmar = async () => {
+    setEliminando(true);
+    setError('');
+
+    try {
+      await onConfirmar();
+    } catch (err) {
+      setError(err.message || 'No fue posible eliminar el registro.');
+    } finally {
+      setEliminando(false);
+    }
+  };
 
   return (
     <div
@@ -37,6 +52,8 @@ export default function ModalConfirmarEliminar({ solicitud, onClose, onCerrar, o
           </div>
 
           <div className="modal-body p-4 text-center">
+            {error && <div className="alert alert-danger py-2 small text-start">{error}</div>}
+
             <div className="text-danger mb-3">
               <i className="bi bi-trash3-fill" style={{ fontSize: '3rem' }}></i>
             </div>
@@ -53,15 +70,17 @@ export default function ModalConfirmarEliminar({ solicitud, onClose, onCerrar, o
               type="button"
               className="btn btn-outline-secondary btn-sm px-4"
               onClick={cerrarModal}
+              disabled={eliminando}
             >
               Cancelar
             </button>
             <button
               type="button"
               className="btn btn-danger btn-sm px-4 fw-semibold"
-              onClick={onConfirmar}
+              onClick={handleConfirmar}
+              disabled={eliminando}
             >
-              Sí, Eliminar Registro
+              {eliminando ? 'Eliminando...' : 'Sí, Eliminar Registro'}
             </button>
           </div>
         </div>

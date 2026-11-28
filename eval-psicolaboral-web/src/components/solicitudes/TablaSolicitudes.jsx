@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 // Quita tildes y pasa a minúsculas para búsquedas flexibles
 const normalizarTexto = (texto) => {
@@ -92,6 +92,27 @@ export default function TablaSolicitudes({
     }
   };
 
+  const getCompatibilidad = (item) => {
+    const valor = Number(item.compatibilidad);
+    if (
+      item.compatibilidad === null ||
+      item.compatibilidad === undefined ||
+      item.compatibilidad === '' ||
+      !Number.isFinite(valor)
+    ) {
+      return null;
+    }
+    return Math.max(0, Math.min(100, valor));
+  };
+
+  const getBadgeCompatibilidad = (item) => {
+    const valor = getCompatibilidad(item);
+    if (valor === null) return 'bg-light text-muted border';
+    if (valor >= 80) return 'bg-success';
+    if (valor >= 60) return 'bg-warning text-dark';
+    return 'bg-danger';
+  };
+
   return (
     <div className="card shadow-sm border-0 bg-white rounded-3">
       <div className="card-body p-3">
@@ -150,6 +171,7 @@ export default function TablaSolicitudes({
               <tr>
                 <th>Candidato / RUT</th>
                 <th>Cargo al que Postula</th>
+                <th>Compatibilidad</th>
                 <th>Estado</th>
                 <th>Entrevista / Informe</th>
                 <th className="text-end">Acciones</th>
@@ -158,7 +180,7 @@ export default function TablaSolicitudes({
             <tbody>
               {solicitudesPaginadas.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="text-center py-4 text-muted small">
+                  <td colSpan="6" className="text-center py-4 text-muted small">
                     No se encontraron postulaciones que coincidan con la búsqueda.
                   </td>
                 </tr>
@@ -174,6 +196,17 @@ export default function TablaSolicitudes({
                       <span className={`badge ${item.origen === 'Interno' ? 'bg-primary-subtle text-primary border' : 'bg-light text-secondary border'}`}>
                         {item.origen || 'Externo'}
                       </span>
+                    </td>
+                    <td>
+                      <span className={`badge ${getBadgeCompatibilidad(item)}`}>
+                        {getCompatibilidad(item) === null ? 'Sin IA' : `${getCompatibilidad(item)}%`}
+                      </span>
+                      {item.alertaCV && (
+                        <i
+                          className="bi bi-exclamation-triangle-fill text-danger ms-1"
+                          title="Posible inconsistencia en el CV"
+                        ></i>
+                      )}
                     </td>
                     <td>
                       <span className={`badge ${getBadgeEstado(item.estado)}`}>
@@ -233,8 +266,8 @@ export default function TablaSolicitudes({
                           </button>
                         )}
 
-                        {/* Borrar (ADMIN y ANALISTA) */}
-                        {(rol === 'ADMIN' || rol === 'ANALISTA') && (
+                        {/* Borrar (solo ADMIN) */}
+                        {rol === 'ADMIN' && (
                           <button
                             type="button"
                             className="btn btn-outline-danger"

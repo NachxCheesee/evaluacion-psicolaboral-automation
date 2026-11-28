@@ -1,6 +1,13 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { FAMILIAS_CARGO } from '../../data/mockData';
 
-export default function FormularioSolicitud({ onCrearSolicitud, usuarioActual }) {
+export default function FormularioSolicitud({
+  onCrearSolicitud,
+  usuarioActual,
+  cargos = FAMILIAS_CARGO
+}) {
+  const opcionesCargo = cargos?.length ? cargos : FAMILIAS_CARGO;
+
   const [formData, setFormData] = useState({
     rut: '',
     candidato: '',
@@ -14,6 +21,7 @@ export default function FormularioSolicitud({ onCrearSolicitud, usuarioActual })
   });
 
   const [error, setError] = useState('');
+  const [guardando, setGuardando] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -28,7 +36,7 @@ export default function FormularioSolicitud({ onCrearSolicitud, usuarioActual })
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -38,9 +46,8 @@ export default function FormularioSolicitud({ onCrearSolicitud, usuarioActual })
     }
 
     const nuevaSolicitud = {
-      id: Date.now(),
       ...formData,
-      emisor: usuarioActual ? usuarioActual.correo : 'analista@aquachile.cl',
+      emisor: usuarioActual ? usuarioActual.correo : 'Portal Interno',
       estado: 'Pendiente',
       fecha: new Date().toISOString().split('T')[0],
       entrevistaArchivo: null,
@@ -50,20 +57,27 @@ export default function FormularioSolicitud({ onCrearSolicitud, usuarioActual })
       observacionesEvaluador: null
     };
 
-    onCrearSolicitud(nuevaSolicitud);
+    setGuardando(true);
 
-    // Resetear formulario
-    setFormData({
-      rut: '',
-      candidato: '',
-      cargo: '',
-      contacto: '',
-      email: '',
-      direccion: '',
-      origen: 'Externo',
-      observaciones: '',
-      cvArchivo: null
-    });
+    try {
+      await onCrearSolicitud(nuevaSolicitud);
+
+      setFormData({
+        rut: '',
+        candidato: '',
+        cargo: '',
+        contacto: '',
+        email: '',
+        direccion: '',
+        origen: 'Externo',
+        observaciones: '',
+        cvArchivo: null
+      });
+    } catch (err) {
+      setError(err.message || 'No fue posible registrar la solicitud.');
+    } finally {
+      setGuardando(false);
+    }
   };
 
   return (
@@ -117,15 +131,20 @@ export default function FormularioSolicitud({ onCrearSolicitud, usuarioActual })
 
             <div className="col-md-6">
               <label className="form-label small fw-semibold">Cargo al que Postula *</label>
-              <input
-                type="text"
+              <select
                 name="cargo"
-                className="form-control form-control-sm"
-                placeholder="Ej. Operario de Planta"
+                className="form-select form-select-sm"
                 value={formData.cargo}
                 onChange={handleChange}
                 required
-              />
+              >
+                <option value="">-- Selecciona un cargo --</option>
+                {opcionesCargo.map((cargo, indice) => (
+                  <option key={`${cargo}-${indice}`} value={cargo}>
+                    {cargo}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="col-md-3">
@@ -187,8 +206,8 @@ export default function FormularioSolicitud({ onCrearSolicitud, usuarioActual })
           </div>
 
           <div className="text-end mt-3">
-            <button type="submit" className="btn btn-primary btn-sm px-4">
-              Registrar Candidato
+            <button type="submit" className="btn btn-primary btn-sm px-4" disabled={guardando}>
+              {guardando ? 'Registrando...' : 'Registrar Candidato'}
             </button>
           </div>
         </form>

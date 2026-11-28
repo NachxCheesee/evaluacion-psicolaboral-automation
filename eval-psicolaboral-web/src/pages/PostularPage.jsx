@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FAMILIAS_CARGO } from '../data/mockData';
 
@@ -23,7 +23,7 @@ const validarRutChileno = (rutCompleto) => {
 
   const resto = suma % 11;
   const dvEsperado = 11 - resto;
-  let dvCalculado = '0';
+  let dvCalculado;
 
   if (dvEsperado === 11) dvCalculado = '0';
   else if (dvEsperado === 10) dvCalculado = 'K';
@@ -56,7 +56,9 @@ const validarTelefonoChileno = (telefono) => {
   return (limpio.length === 9 && limpio.startsWith('9')) || (limpio.length === 11 && limpio.startsWith('569'));
 };
 
-export default function PostularPage({ onCrearSolicitud }) {
+export default function PostularPage({ onCrearSolicitud, cargos = FAMILIAS_CARGO }) {
+  const opcionesCargo = cargos?.length ? cargos : FAMILIAS_CARGO;
+
   const [formData, setFormData] = useState({
     rut: '',
     candidato: '',
@@ -71,6 +73,8 @@ export default function PostularPage({ onCrearSolicitud }) {
   const [errores, setErrores] = useState({});
   const [archivoNombre, setArchivoNombre] = useState('');
   const [enviado, setEnviado] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+  const [errorEnvio, setErrorEnvio] = useState('');
 
   const handleRutChange = (e) => {
     const formateado = formatearRut(e.target.value);
@@ -137,8 +141,9 @@ export default function PostularPage({ onCrearSolicitud }) {
     setFormData((prev) => ({ ...prev, cvArchivo: file.name }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorEnvio('');
     const nuevosErrores = {};
 
     // 1. Validación de RUT
@@ -188,7 +193,6 @@ export default function PostularPage({ onCrearSolicitud }) {
     }
 
     const nuevaPostulacion = {
-      id: Date.now(),
       rut: formData.rut.trim(),
       candidato: formData.candidato.trim(),
       cargo: formData.cargo,
@@ -208,8 +212,16 @@ export default function PostularPage({ onCrearSolicitud }) {
       observacionesEvaluador: null
     };
 
-    onCrearSolicitud(nuevaPostulacion);
-    setEnviado(true);
+    setEnviando(true);
+
+    try {
+      await onCrearSolicitud(nuevaPostulacion);
+      setEnviado(true);
+    } catch (err) {
+      setErrorEnvio(err.message || 'No fue posible registrar la postulación.');
+    } finally {
+      setEnviando(false);
+    }
   };
 
   return (
@@ -267,6 +279,7 @@ export default function PostularPage({ onCrearSolicitud }) {
                   });
                   setArchivoNombre('');
                   setErrores({});
+                  setErrorEnvio('');
                 }}
               >
                 Ingresar Otra Postulación
@@ -286,6 +299,13 @@ export default function PostularPage({ onCrearSolicitud }) {
             </div>
 
             <div className="card-body p-4">
+              {errorEnvio && (
+                <div className="alert alert-danger py-2 small d-flex align-items-center gap-2 mb-4">
+                  <i className="bi bi-exclamation-triangle-fill fs-5"></i>
+                  <span>{errorEnvio}</span>
+                </div>
+              )}
+
               {Object.keys(errores).length > 0 && (
                 <div className="alert alert-danger py-2 small d-flex align-items-center gap-2 mb-4">
                   <i className="bi bi-exclamation-triangle-fill fs-5"></i>
@@ -341,12 +361,14 @@ export default function PostularPage({ onCrearSolicitud }) {
                       required
                     >
                       <option value="">-- Selecciona una vacante disponible --</option>
-                      {FAMILIAS_CARGO.map((cargo, idx) => (
-                        <option key={idx} value={cargo}>
+                      {opcionesCargo.map((cargo, idx) => (
+                        <option key={`${cargo}-${idx}`} value={cargo}>
                           {cargo}
                         </option>
                       ))}
-                      <option value="Otro Cargo Operativo">Otro Cargo Operativo / Administrativo</option>
+                      {!opcionesCargo.includes('Otro Cargo Operativo') && (
+                        <option value="Otro Cargo Operativo">Otro Cargo Operativo / Administrativo</option>
+                      )}
                     </select>
                     {errores.cargo && <div className="invalid-feedback small">{errores.cargo}</div>}
                   </div>
@@ -439,9 +461,13 @@ export default function PostularPage({ onCrearSolicitud }) {
                   <Link to="/" className="text-decoration-none small text-muted">
                     Cancelar
                   </Link>
-                  <button type="submit" className="btn btn-primary px-4 fw-semibold py-2 d-flex align-items-center gap-2">
+                  <button
+                    type="submit"
+                    className="btn btn-primary px-4 fw-semibold py-2 d-flex align-items-center gap-2"
+                    disabled={enviando}
+                  >
                     <i className="bi bi-send-check"></i>
-                    <span>Confirmar y Enviar Postulación</span>
+                    <span>{enviando ? 'Enviando...' : 'Confirmar y Enviar Postulación'}</span>
                   </button>
                 </div>
               </form>

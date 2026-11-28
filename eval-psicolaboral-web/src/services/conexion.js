@@ -6,6 +6,11 @@ export function cliente() {
   return supabase;
 }
 
+// Ejecuta una RPC de Supabase y devuelve directamente el resultado
+export async function llamarRpc(nombre, parametros = {}) {
+  return resolver(cliente().rpc(nombre, parametros));
+}
+
 // Ejecuta una consulta de supabase-js ({ data, error }) y unifica los errores
 export async function resolver(consulta) {
   let resultado;

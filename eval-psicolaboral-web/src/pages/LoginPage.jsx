@@ -1,32 +1,36 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
-export default function LoginPage({ cuentas, onLogin }) {
+export default function LoginPage({ onLogin, mostrarAccesosDemo = false }) {
   const [correo, setCorreo] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [ingresando, setIngresando] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const iniciarSesion = async (correoIngreso, passwordIngreso) => {
     setError('');
+    setIngresando(true);
 
-    const usuarioEncontrado = cuentas.find(
-      (u) => u.correo.toLowerCase() === correo.trim().toLowerCase() && u.password === password
-    );
-
-    if (usuarioEncontrado) {
-      onLogin(usuarioEncontrado);
+    try {
+      await onLogin(correoIngreso, passwordIngreso);
       navigate('/panel');
-    } else {
-      setError('Credenciales incorrectas. Verifique su correo corporativo y contraseña.');
+    } catch (err) {
+      setError(err.message || 'No fue posible iniciar sesión.');
+    } finally {
+      setIngresando(false);
     }
   };
 
-  const autoCompletar = (emailDemo, passDemo) => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    await iniciarSesion(correo, password);
+  };
+
+  const accesoDemo = async (emailDemo, passDemo) => {
     setCorreo(emailDemo);
     setPassword(passDemo);
-    setError('');
+    await iniciarSesion(emailDemo, passDemo);
   };
 
   return (
@@ -54,6 +58,7 @@ export default function LoginPage({ cuentas, onLogin }) {
                 value={correo}
                 onChange={(e) => setCorreo(e.target.value)}
                 required
+                disabled={ingresando}
               />
             </div>
 
@@ -66,11 +71,16 @@ export default function LoginPage({ cuentas, onLogin }) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                disabled={ingresando}
               />
             </div>
 
-            <button type="submit" className="btn btn-primary btn-sm w-100 fw-semibold py-2 mb-3">
-              Ingresar al Panel
+            <button
+              type="submit"
+              className="btn btn-primary btn-sm w-100 fw-semibold py-2 mb-3"
+              disabled={ingresando}
+            >
+              {ingresando ? 'Ingresando...' : 'Ingresar al Panel'}
             </button>
           </form>
 
@@ -80,32 +90,39 @@ export default function LoginPage({ cuentas, onLogin }) {
             </Link>
           </div>
 
-          <div className="border-top pt-3">
-            <span className="d-block small text-muted mb-2 text-center">Acceso rápido para demostración:</span>
-            <div className="d-flex flex-column gap-1">
-              <button
-                type="button"
-                className="btn btn-outline-secondary btn-sm text-start"
-                onClick={() => autoCompletar('admin@aquachile.cl', '123')}
-              >
-                <strong>Admin:</strong> admin@aquachile.cl
-              </button>
-              <button
-                type="button"
-                className="btn btn-outline-secondary btn-sm text-start"
-                onClick={() => autoCompletar('analista@aquachile.cl', '123')}
-              >
-                <strong>Analista:</strong> analista@aquachile.cl
-              </button>
-              <button
-                type="button"
-                className="btn btn-outline-secondary btn-sm text-start"
-                onClick={() => autoCompletar('evaluador@aquachile.cl', '123')}
-              >
-                <strong>Evaluador:</strong> evaluador@aquachile.cl
-              </button>
+          {mostrarAccesosDemo && (
+            <div className="border-top pt-3">
+              <span className="d-block small text-muted mb-2 text-center">
+                Acceso directo de demostración:
+              </span>
+              <div className="d-flex flex-column gap-1">
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary btn-sm text-start"
+                  onClick={() => accesoDemo('admin@aquachile.cl', '123')}
+                  disabled={ingresando}
+                >
+                  <strong>Admin:</strong> admin@aquachile.cl
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary btn-sm text-start"
+                  onClick={() => accesoDemo('analista@aquachile.cl', '123')}
+                  disabled={ingresando}
+                >
+                  <strong>Analista:</strong> analista@aquachile.cl
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary btn-sm text-start"
+                  onClick={() => accesoDemo('evaluador@aquachile.cl', '123')}
+                  disabled={ingresando}
+                >
+                  <strong>Evaluador:</strong> evaluador@aquachile.cl
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

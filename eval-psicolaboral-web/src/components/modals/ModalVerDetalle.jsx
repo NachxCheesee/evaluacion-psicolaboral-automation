@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 
 export default function ModalVerDetalle({ solicitud, onClose, onCerrar }) {
   const cerrarModal = onClose || onCerrar || (() => {});
@@ -15,6 +15,30 @@ export default function ModalVerDetalle({ solicitud, onClose, onCerrar }) {
 
   const handleDescargar = (nombreArchivo) => {
     alert(`Descargando archivo simulado: ${nombreArchivo}`);
+  };
+
+  const compatibilidad = Number(solicitud.compatibilidad);
+  const tieneCompatibilidad =
+    solicitud.compatibilidad !== null &&
+    solicitud.compatibilidad !== undefined &&
+    solicitud.compatibilidad !== '' &&
+    Number.isFinite(compatibilidad);
+  const colorCompatibilidad = !tieneCompatibilidad
+    ? 'bg-secondary'
+    : compatibilidad >= 80
+      ? 'bg-success'
+      : compatibilidad >= 60
+        ? 'bg-warning text-dark'
+        : 'bg-danger';
+
+  const formatearFechaIA = (valor) => {
+    if (!valor) return 'Sin actualizaciones registradas';
+    const fecha = new Date(valor);
+    if (Number.isNaN(fecha.getTime())) return 'Sin actualizaciones registradas';
+    return fecha.toLocaleString('es-CL', {
+      dateStyle: 'short',
+      timeStyle: 'short'
+    });
   };
 
   return (
@@ -112,6 +136,51 @@ export default function ModalVerDetalle({ solicitud, onClose, onCerrar }) {
               <div className="col-md-6">
                 <label className="form-label text-muted small mb-1 fw-semibold">Correo Electrónico</label>
                 <div className="text-dark">{solicitud.email || 'No registrado'}</div>
+              </div>
+            </div>
+
+            {/* Análisis de compatibilidad IA */}
+            <div className="mb-3 p-3 bg-light rounded-3 border">
+              <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                <label className="form-label fw-semibold small text-muted mb-0 d-flex align-items-center gap-2">
+                  <i className="bi bi-stars text-primary"></i>
+                  <span>Análisis IA del CV</span>
+                </label>
+                <div className="d-flex align-items-center gap-2">
+                  {solicitud.alertaCV && (
+                    <span className="badge bg-danger-subtle text-danger border border-danger-subtle">
+                      <i className="bi bi-exclamation-triangle me-1"></i>
+                      Posible inconsistencia
+                    </span>
+                  )}
+                  <span className={`badge ${colorCompatibilidad}`}>
+                    {tieneCompatibilidad ? `${compatibilidad}% compatible` : 'Sin compatibilidad'}
+                  </span>
+                </div>
+              </div>
+
+              {tieneCompatibilidad && (
+                <div className="progress mb-2" style={{ height: '10px' }}>
+                  <div
+                    className={`progress-bar ${colorCompatibilidad}`}
+                    style={{ width: `${compatibilidad}%` }}
+                  ></div>
+                </div>
+              )}
+
+              {solicitud.comentarioIA ? (
+                <p className="small mb-2 text-dark">{solicitud.comentarioIA}</p>
+              ) : (
+                <p className="small mb-2 text-muted fst-italic">
+                  Sin comentario de IA registrado.
+                </p>
+              )}
+
+              <div className="small text-muted">
+                Última actualización: <strong>{formatearFechaIA(solicitud.iaActualizadoAt)}</strong>
+                {solicitud.iaActualizadoPorNombre
+                  ? ` por ${solicitud.iaActualizadoPorNombre}`
+                  : ''}
               </div>
             </div>
 
