@@ -1,7 +1,7 @@
 -- ============================================================
 -- Parte 3.5 - Validacion posterior a la migracion (AquaChile)
 -- ------------------------------------------------------------
--- Ejecutar DESPUES de parte5_ia_compatibilidad.sql.
+-- Ejecutar DESPUES de parte7_ofertas_postulaciones.sql.
 -- Es un script de solo lectura: no modifica datos ni objetos.
 -- ============================================================
 
@@ -29,6 +29,9 @@ union all select 'vw_solicitudes_completas', to_regclass('public.vw_solicitudes_
 union all select 'vw_usuarios_publicos', to_regclass('public.vw_usuarios_publicos') is not null
 union all select 'vw_historial_solicitudes', to_regclass('public.vw_historial_solicitudes') is not null
 union all select 'configuracion_ia', to_regclass('public.configuracion_ia') is not null
+union all select 'ofertas', to_regclass('public.ofertas') is not null
+union all select 'postulantes', to_regclass('public.postulantes') is not null
+union all select 'postulaciones', to_regclass('public.postulaciones') is not null
 order by objeto;
 
 -- 2. RPC requeridas por el frontend ---------------------------
@@ -178,6 +181,28 @@ select
 
 select count(*) as configuracion_ia_filas
 from public.configuracion_ia;
+
+-- 3.3 Modulo de ofertas y postulaciones -----------------------
+
+select
+  exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'solicitudes'
+      and column_name = 'cv_drive_file_id'
+  ) as solicitudes_con_cv_drive,
+  exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'postulaciones'
+      and column_name = 'solicitud_id'
+  ) as postulaciones_con_solicitud,
+  exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'postulaciones'
+      and column_name = 'cv_drive_file_id'
+  ) as postulaciones_con_cv_drive;
 
 select 'solicitudes_compatibilidad_fuera_rango' as problema, count(*) as filas
 from public.solicitudes

@@ -20,6 +20,7 @@ import ModalEvaluacion from '../components/modals/ModalEvaluacion';
 import ModalConfirmarEliminar from '../components/modals/ModalConfirmarEliminar';
 import ModalEditarUsuario from '../components/modals/ModalEditarUsuario';
 import ConfiguracionIA from '../components/ia/ConfiguracionIA';
+import GestionOfertas from '../components/ofertas/GestionOfertas';
 
 export default function PanelPage({
   usuarioActual,
@@ -72,8 +73,8 @@ export default function PanelPage({
             </span>
           </div>
 
-          {usuarioActual.rol === 'ADMIN' && (
-            <div className="btn-group btn-group-sm shadow-sm">
+          {(usuarioActual.rol === 'ADMIN' || usuarioActual.rol === 'ANALISTA') && (
+            <div className="btn-group btn-group-sm shadow-sm flex-wrap">
               <button
                 type="button"
                 className={`btn ${tabActiva === 'solicitudes' ? 'btn-primary' : 'btn-outline-primary'}`}
@@ -83,18 +84,29 @@ export default function PanelPage({
               </button>
               <button
                 type="button"
-                className={`btn ${tabActiva === 'usuarios' ? 'btn-primary' : 'btn-outline-primary'}`}
-                onClick={() => setTabActiva('usuarios')}
+                className={`btn ${tabActiva === 'ofertas' ? 'btn-primary' : 'btn-outline-primary'}`}
+                onClick={() => setTabActiva('ofertas')}
               >
-                Gestión de Usuarios ({cuentas.length})
+                Ofertas Laborales
               </button>
-              <button
-                type="button"
-                className={`btn ${tabActiva === 'ia' ? 'btn-primary' : 'btn-outline-primary'}`}
-                onClick={() => setTabActiva('ia')}
-              >
-                Configuración IA
-              </button>
+              {usuarioActual.rol === 'ADMIN' && (
+                <>
+                  <button
+                    type="button"
+                    className={`btn ${tabActiva === 'usuarios' ? 'btn-primary' : 'btn-outline-primary'}`}
+                    onClick={() => setTabActiva('usuarios')}
+                  >
+                    Gestión de Usuarios ({cuentas.length})
+                  </button>
+                  <button
+                    type="button"
+                    className={`btn ${tabActiva === 'ia' ? 'btn-primary' : 'btn-outline-primary'}`}
+                    onClick={() => setTabActiva('ia')}
+                  >
+                    Configuración IA
+                  </button>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -168,7 +180,12 @@ export default function PanelPage({
           </>
         )}
 
-        {/* PESTAÑA 3: CONFIGURACIÓN IA */}
+        {/* PESTAÑA 3: OFERTAS */}
+        {tabActiva === 'ofertas' && (usuarioActual.rol === 'ADMIN' || usuarioActual.rol === 'ANALISTA') && (
+          <GestionOfertas cuentas={cuentas} />
+        )}
+
+        {/* PESTAÑA 4: CONFIGURACIÓN IA */}
         {tabActiva === 'ia' && usuarioActual.rol === 'ADMIN' && (
           <ConfiguracionIA usuarioActual={usuarioActual} modoDemo={modoDemo} />
         )}

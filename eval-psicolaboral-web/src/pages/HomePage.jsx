@@ -15,6 +15,10 @@ export default function HomePage() {
           </Link>
 
           <div className="d-flex align-items-center gap-2">
+            <Link to="/ofertas" className="btn btn-outline-primary btn-sm px-3 fw-semibold d-flex align-items-center gap-1">
+              <i className="bi bi-briefcase"></i>
+              <span>Ver Ofertas</span>
+            </Link>
             <Link to="/postular" className="btn btn-primary btn-sm px-3 fw-semibold d-flex align-items-center gap-1">
               <i className="bi bi-file-earmark-person"></i>
               <span>Postular CV</span>

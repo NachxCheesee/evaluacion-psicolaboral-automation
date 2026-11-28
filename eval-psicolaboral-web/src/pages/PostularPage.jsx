@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import { FAMILIAS_CARGO } from '../data/mockData';
+import { obtenerOfertaPublica, postularOferta } from '../services/ofertas';
 
 // --- UTILIDADES DE VALIDACIÓN ---
 
@@ -56,7 +57,13 @@ const validarTelefonoChileno = (telefono) => {
   return (limpio.length === 9 && limpio.startsWith('9')) || (limpio.length === 11 && limpio.startsWith('569'));
 };
 
-export default function PostularPage({ onCrearSolicitud, cargos = FAMILIAS_CARGO }) {
+export default function PostularPage({
+  onCrearSolicitud,
+  cargos = FAMILIAS_CARGO,
+  ofertaId: ofertaIdProp = null
+}) {
+  const { ofertaId: ofertaIdParam } = useParams();
+  const ofertaId = ofertaIdProp || ofertaIdParam;
   const opcionesCargo = cargos?.length ? cargos : FAMILIAS_CARGO;
 
   const [formData, setFormData] = useState({
@@ -70,11 +77,42 @@ export default function PostularPage({ onCrearSolicitud, cargos = FAMILIAS_CARGO
     cvArchivo: null
   });
 
+  const [oferta, setOferta] = useState(null);
+  const [cvFile, setCvFile] = useState(null);
+  const [cargandoOferta, setCargandoOferta] = useState(Boolean(ofertaId));
   const [errores, setErrores] = useState({});
   const [archivoNombre, setArchivoNombre] = useState('');
   const [enviado, setEnviado] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [errorEnvio, setErrorEnvio] = useState('');
+
+  useEffect(() => {
+    if (!ofertaId) {
+      return undefined;
+    }
+
+    let activo = true;
+
+    async function cargarOferta() {
+      try {
+        const data = await obtenerOfertaPublica(ofertaId);
+        if (!activo) return;
+        setOferta(data);
+        setFormData((prev) => ({ ...prev, cargo: data.cargo || '' }));
+      } catch (err) {
+        if (activo) {
+          setErrorEnvio(err.message || 'No fue posible cargar la oferta seleccionada.');
+        }
+      } finally {
+        if (activo) setCargandoOferta(false);
+      }
+    }
+
+    cargarOferta();
+    return () => {
+      activo = false;
+    };
+  }, [ofertaId]);
 
   const handleRutChange = (e) => {
     const formateado = formatearRut(e.target.value);
@@ -110,6 +148,7 @@ export default function PostularPage({ onCrearSolicitud, cargos = FAMILIAS_CARGO
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) {
+      setCvFile(null);
       setFormData((prev) => ({ ...prev, cvArchivo: null }));
       setArchivoNombre('');
       return;
@@ -117,7 +156,7 @@ export default function PostularPage({ onCrearSolicitud, cargos = FAMILIAS_CARGO
 
     const extensionesValidas = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
     const esValido = extensionesValidas.includes(file.type) || file.name.endsWith('.pdf') || file.name.endsWith('.doc') || file.name.endsWith('.docx');
-    const pesoMaximoMB = 5;
+    const pesoMaximoMB = 10;
 
     if (!esValido) {
       setErrores((prev) => ({ ...prev, cvArchivo: 'Solo se admiten documentos en formato PDF o Word (.docx).' }));
@@ -137,6 +176,7 @@ export default function PostularPage({ onCrearSolicitud, cargos = FAMILIAS_CARGO
       return actual;
     });
 
+    setCvFile(file);
     setArchivoNombre(file.name);
     setFormData((prev) => ({ ...prev, cvArchivo: file.name }));
   };
@@ -182,7 +222,7 @@ export default function PostularPage({ onCrearSolicitud, cargos = FAMILIAS_CARGO
     }
 
     // 7. Validación Obligatoria de CV
-    if (!formData.cvArchivo) {
+    if (!formData.cvArchivo || (ofertaId && !cvFile)) {
       nuevosErrores.cvArchivo = 'Debes adjuntar obligatoriamente tu currículum en PDF o DOCX.';
     }
 
@@ -215,7 +255,24 @@ export default function PostularPage({ onCrearSolicitud, cargos = FAMILIAS_CARGO
     setEnviando(true);
 
     try {
-      await onCrearSolicitud(nuevaPostulacion);
+      if (ofertaId) {
+        await postularOferta(
+          ofertaId,
+          {
+            nombre: formData.candidato.trim(),
+            rut: formData.rut.trim(),
+            correo: formData.email.trim().toLowerCase(),
+            telefono: formData.contacto.trim(),
+            observaciones: formData.observaciones.trim() || null
+          },
+          cvFile
+        );
+      } else {
+        if (typeof onCrearSolicitud !== 'function') {
+          throw new Error('El portal de postulación espontánea no está disponible.');
+        }
+        await onCrearSolicitud(nuevaPostulacion);
+      }
       setEnviado(true);
     } catch (err) {
       setErrorEnvio(err.message || 'No fue posible registrar la postulación.');
@@ -270,13 +327,14 @@ export default function PostularPage({ onCrearSolicitud, cargos = FAMILIAS_CARGO
                   setFormData({
                     rut: '',
                     candidato: '',
-                    cargo: '',
+                    cargo: oferta?.cargo || '',
                     contacto: '',
                     email: '',
                     direccion: '',
                     observaciones: '',
                     cvArchivo: null
                   });
+                  setCvFile(null);
                   setArchivoNombre('');
                   setErrores({});
                   setErrorEnvio('');
@@ -291,11 +349,21 @@ export default function PostularPage({ onCrearSolicitud, cargos = FAMILIAS_CARGO
             <div className="card-header bg-white border-bottom py-3 px-4">
               <div className="d-flex align-items-center gap-2">
                 <i className="bi bi-file-earmark-person-fill text-primary fs-5"></i>
-                <h5 className="fw-bold text-dark mb-0">Postulación Abierta a Faenas y Plantas</h5>
+                <h5 className="fw-bold text-dark mb-0">
+                  {oferta ? `Postulación: ${oferta.cargo}` : 'Postulación Abierta a Faenas y Plantas'}
+                </h5>
               </div>
               <p className="text-muted small mb-0 mt-1">
-                Completa tus antecedentes verificables. Todos los campos marcados con asterisco (*) son obligatorios.
+                {oferta
+                  ? `${oferta.categoria} · ${oferta.ubicacion}. Completa tus antecedentes y adjunta tu CV.`
+                  : 'Completa tus antecedentes verificables. Todos los campos marcados con asterisco (*) son obligatorios.'}
               </p>
+              {cargandoOferta && (
+                <div className="small text-primary mt-2">
+                  <span className="spinner-border spinner-border-sm me-1"></span>
+                  Cargando oferta...
+                </div>
+              )}
             </div>
 
             <div className="card-body p-4">
@@ -353,23 +421,32 @@ export default function PostularPage({ onCrearSolicitud, cargos = FAMILIAS_CARGO
                   {/* Cargo al que Postula */}
                   <div className="col-md-6">
                     <label className="form-label small fw-semibold text-dark">Cargo de Interés *</label>
-                    <select
-                      name="cargo"
-                      className={`form-select form-select-sm ${errores.cargo ? 'is-invalid' : ''}`}
-                      value={formData.cargo}
-                      onChange={handleChange}
-                      required
-                    >
-                      <option value="">-- Selecciona una vacante disponible --</option>
-                      {opcionesCargo.map((cargo, idx) => (
-                        <option key={`${cargo}-${idx}`} value={cargo}>
-                          {cargo}
-                        </option>
-                      ))}
-                      {!opcionesCargo.includes('Otro Cargo Operativo') && (
-                        <option value="Otro Cargo Operativo">Otro Cargo Operativo / Administrativo</option>
-                      )}
-                    </select>
+                    {ofertaId ? (
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        value={oferta?.cargo || formData.cargo}
+                        disabled
+                      />
+                    ) : (
+                      <select
+                        name="cargo"
+                        className={`form-select form-select-sm ${errores.cargo ? 'is-invalid' : ''}`}
+                        value={formData.cargo}
+                        onChange={handleChange}
+                        required
+                      >
+                        <option value="">-- Selecciona una vacante disponible --</option>
+                        {opcionesCargo.map((cargo, idx) => (
+                          <option key={`${cargo}-${idx}`} value={cargo}>
+                            {cargo}
+                          </option>
+                        ))}
+                        {!opcionesCargo.includes('Otro Cargo Operativo') && (
+                          <option value="Otro Cargo Operativo">Otro Cargo Operativo / Administrativo</option>
+                        )}
+                      </select>
+                    )}
                     {errores.cargo && <div className="invalid-feedback small">{errores.cargo}</div>}
                   </div>
 
@@ -438,7 +515,7 @@ export default function PostularPage({ onCrearSolicitud, cargos = FAMILIAS_CARGO
                       <div className="text-danger small mt-1">{errores.cvArchivo}</div>
                     ) : (
                       <div className="form-text small">
-                        Admite formato <strong>PDF</strong> o <strong>Word</strong> (máximo 5 MB). Requisito indispensable para avanzar a evaluación.
+                        Admite formato <strong>PDF</strong> o <strong>Word</strong> (máximo 10 MB). Requisito indispensable para avanzar a evaluación.
                       </div>
                     )}
                   </div>

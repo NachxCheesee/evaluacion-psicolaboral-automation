@@ -61,18 +61,18 @@ describe('Módulo de Pruebas: Validaciones de Negocio y Algoritmos', () => {
 
     // PRUEBA 1: Validación de RUTs chilenos válidos con dígito verificador correcto
   it('1. Debe validar exitosamente RUTs chilenos reales con dígito verificador correcto', () => {
-    expect(validarRutChileno('18.342.195-6')).toBeTrue();
-    expect(validarRutChileno('15.892.401-3')).toBeTrue();
-    expect(validarRutChileno('12.784.310-4')).toBeTrue();
-    expect(validarRutChileno('19.124.883-K')).toBeTrue();
+    expect(validarRutChileno('18.342.195-6')).toBe(true);
+    expect(validarRutChileno('15.892.401-3')).toBe(true);
+    expect(validarRutChileno('12.784.310-4')).toBe(true);
+    expect(validarRutChileno('19.124.883-K')).toBe(true);
   });
 
   // PRUEBA 2: Rechazo de RUTs erróneos o manipulados
   it('2. Debe rechazar RUTs con dígito verificador adulterado o longitud insuficiente', () => {
-    expect(validarRutChileno('18.342.195-9')).toBeFalse();
-    expect(validarRutChileno('11.111.111-0')).toBeFalse();
-    expect(validarRutChileno('12.345')).toBeFalse();
-    expect(validarRutChileno('')).toBeFalse();
+    expect(validarRutChileno('18.342.195-9')).toBe(false);
+    expect(validarRutChileno('11.111.111-0')).toBe(false);
+    expect(validarRutChileno('12.345')).toBe(false);
+    expect(validarRutChileno('')).toBe(false);
   });
 
   // PRUEBA 3: Normalización insensible a tildes y mayúsculas para el buscador
@@ -83,21 +83,21 @@ describe('Módulo de Pruebas: Validaciones de Negocio y Algoritmos', () => {
 
     expect(busquedaUsuario).toBe('rios');
     expect(busquedaUsuario).toBe(busquedaSinTilde);
-    expect(nombreEnBase.includes(busquedaSinTilde)).toBeTrue();
+    expect(nombreEnBase.includes(busquedaSinTilde)).toBe(true);
   });
 
   // PRUEBA 4: Verificación de números móviles chilenos
   it('4. Debe validar números celulares chilenos tanto en formato nacional como con código internacional', () => {
-    expect(validarTelefonoChileno('+56 9 8451 2234')).toBeTrue();
-    expect(validarTelefonoChileno('984512234')).toBeTrue();
-    expect(validarTelefonoChileno('+56984512234')).toBeTrue();
+    expect(validarTelefonoChileno('+56 9 8451 2234')).toBe(true);
+    expect(validarTelefonoChileno('984512234')).toBe(true);
+    expect(validarTelefonoChileno('+56984512234')).toBe(true);
   });
 
   // PRUEBA 5: Rechazo de números telefónicos inválidos
   it('5. Debe rechazar cadenas numéricas incompletas o de telefonía fija sin prefijo móvil', () => {
-    expect(validarTelefonoChileno('65223344')).toBeFalse(); // Fijo de Puerto Montt sin 9
-    expect(validarTelefonoChileno('12345')).toBeFalse();
-    expect(validarTelefonoChileno('')).toBeFalse();
+    expect(validarTelefonoChileno('65223344')).toBe(false); // Fijo de Puerto Montt sin 9
+    expect(validarTelefonoChileno('12345')).toBe(false);
+    expect(validarTelefonoChileno('')).toBe(false);
   });
 
 });
