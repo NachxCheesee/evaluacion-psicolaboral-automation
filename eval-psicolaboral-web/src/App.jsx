@@ -19,11 +19,14 @@ import {
   eliminarCuenta
 } from './services/cuentas';
 import { guardarAnalisisIASolicitud } from './services/ia';
+import * as backendApi from './lib/api';
 
 import HomePage from './pages/HomePage';
 import PostularPage from './pages/PostularPage';
 import LoginPage from './pages/LoginPage';
 import PanelPage from './pages/PanelPage';
+import OfertasPage from './pages/OfertasPage';
+import OfertaDetallePage from './pages/OfertaDetallePage';
 
 function leerSesionGuardada() {
   try {
@@ -110,32 +113,47 @@ export default function App() {
   };
 
   const handleLogin = async (correo, password) => {
-    if (modoDemo) {
-      const encontrado = cuentas.find(
-        (cuenta) =>
-          cuenta.correo.toLowerCase() === correo.trim().toLowerCase() &&
-          cuenta.password === password
-      );
-
-      if (!encontrado) {
-        throw new Error('Credenciales incorrectas. Verifique su correo corporativo y contraseña.');
-      }
-
+    try {
+      const encontrado = await backendApi.login(correo, password);
       setUsuarioActual(encontrado);
       return encontrado;
+    } catch (backendError) {
+      if (modoDemo) {
+        const encontrado = cuentas.find(
+          (cuenta) =>
+            cuenta.correo.toLowerCase() === correo.trim().toLowerCase() &&
+            cuenta.password === password
+        );
+
+        if (!encontrado) {
+          throw new Error(
+            'Credenciales incorrectas. Verifique su correo corporativo y contraseña.',
+            { cause: backendError }
+          );
+        }
+
+        setUsuarioActual(encontrado);
+        return encontrado;
+      }
+
+      try {
+        const encontrado = await loginUsuario(correo, password);
+        if (!encontrado) {
+          throw new Error('Credenciales incorrectas.', { cause: backendError });
+        }
+        setUsuarioActual(encontrado);
+        return encontrado;
+      } catch (supabaseError) {
+        throw new Error(
+          backendError.message || 'No fue posible iniciar sesión. Verifique sus credenciales.',
+          { cause: supabaseError }
+        );
+      }
     }
-
-    const encontrado = await loginUsuario(correo, password);
-
-    if (!encontrado) {
-      throw new Error('Credenciales incorrectas. Verifique su correo corporativo y contraseña.');
-    }
-
-    setUsuarioActual(encontrado);
-    return encontrado;
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await backendApi.logout();
     setUsuarioActual(null);
   };
 
@@ -297,9 +315,21 @@ export default function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/home" element={<HomePage />} />
+        <Route path="/ofertas" element={<OfertasPage />} />
+        <Route path="/ofertas/:id" element={<OfertaDetallePage />} />
 
         <Route
           path="/postular"
+          element={
+            <PostularPage
+              onCrearSolicitud={handleCrearSolicitud}
+              cargos={catalogos.cargosNombres}
+            />
+          }
+        />
+
+        <Route
+          path="/postular/:ofertaId"
           element={
             <PostularPage
               onCrearSolicitud={handleCrearSolicitud}

@@ -5,7 +5,7 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'coverage']),
   {
     files: ['**/*.{js,jsx}'],
     extends: [
@@ -19,12 +19,12 @@ export default defineConfig([
     },
   },
   {
-    // Tests unitarios (Karma + Jasmine)
+    // Tests unitarios (Vitest)
     files: ['src/test/**/*.js'],
     languageOptions: {
       globals: {
         ...globals.browser,
-        ...globals.jasmine,
+        ...globals.vitest,
       },
     },
   },

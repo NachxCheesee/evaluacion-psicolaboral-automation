@@ -190,6 +190,7 @@ alter table public.solicitudes
   add column if not exists evaluador_asignado_id bigint references public.cuentas (id) on delete set null,
   add column if not exists prioridad text,
   add column if not exists fecha_cierre timestamptz,
+  add column if not exists cv_drive_file_id text,
   add column if not exists compatibilidad_porcentaje smallint,
   add column if not exists comentario_ia_cv text,
   add column if not exists alerta_cv_inconsistente boolean not null default false,

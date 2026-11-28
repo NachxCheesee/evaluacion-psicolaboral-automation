@@ -42,7 +42,7 @@ describe('Módulo de Pruebas: Gestión de Solicitudes y Métricas del Panel', ()
     });
 
     const algunaPendiente = filtradas.some((s) => s.estado === 'Pendiente');
-    expect(algunaPendiente).toBeFalse();
+    expect(algunaPendiente).toBe(false);
   });
 
   // PRUEBA 3: Ordenamiento alfabético ascendente por nombre del postulante
@@ -88,7 +88,7 @@ describe('Módulo de Pruebas: Gestión de Solicitudes y Métricas del Panel', ()
 
       expect(listaTrasEliminar.length).toBe(totalOriginal - 1);
       const existeAun = listaTrasEliminar.some((s) => s.id === idAEliminar);
-      expect(existeAun).toBeFalse();
+      expect(existeAun).toBe(false);
     }
   });
 

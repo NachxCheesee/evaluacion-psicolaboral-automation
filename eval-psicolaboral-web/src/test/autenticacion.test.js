@@ -61,7 +61,7 @@ describe('Módulo de Pruebas: Autenticación y Control de Accesos (RBAC)', () =>
     const claveConfirmacion = 'AquaChile2025';
 
     const coinciden = claveNueva === claveConfirmacion;
-    expect(coinciden).toBeFalse();
+    expect(coinciden).toBe(false);
   });
 
 });
